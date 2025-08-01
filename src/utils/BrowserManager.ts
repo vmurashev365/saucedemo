@@ -1,4 +1,4 @@
-import { Browser, Page, BrowserContext, chromium, firefox, webkit } from '@playwright/test';
+﻿import { Browser, Page, BrowserContext, chromium, firefox, webkit } from '@playwright/test';
 import { TestConfig } from '../types';
 
 export class BrowserManager {
@@ -8,9 +8,20 @@ export class BrowserManager {
 
   async launchBrowser(config: TestConfig): Promise<Browser> {
     const browserOptions = {
-      headless: !config.headed,
-      slowMo: config.debug ? 100 : 0,
-      args: config.debug ? ['--start-maximized'] : []
+      headless: !config.headed, // Учитываем настройку headed из конфигурации
+      slowMo: config.headed ? 300 : 0, // Замедление для видимого режима
+      timeout: 60000,
+      args: config.headed ? [
+        '--no-sandbox',
+        '--disable-dev-shm-usage', 
+        '--disable-web-security',
+        '--start-maximized', // Максимизированное окно для видимого режима
+        '--window-size=1920,1080'
+      ] : [
+        '--no-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-web-security'
+      ]
     };
 
     switch (config.browser) {
@@ -30,8 +41,11 @@ export class BrowserManager {
   async createContext(browser: Browser, config: TestConfig): Promise<BrowserContext> {
     const [width, height] = config.viewport.split('x').map(Number);
     
+    // Для headed режима используем null viewport (максимальный размер экрана)
+    const viewportSettings = config.headed ? null : { width, height };
+    
     this.context = await browser.newContext({
-      viewport: { width, height },
+      viewport: viewportSettings,
       ignoreHTTPSErrors: true,
       acceptDownloads: true,
       recordVideo: config.debug ? { dir: 'videos/' } : undefined,
@@ -48,12 +62,12 @@ export class BrowserManager {
 
     // Add console logging in debug mode
     if (config.debug) {
-      this.page.on('console', (msg) => {
-        console.log(`Console ${msg.type()}: ${msg.text()}`);
+      this.page.on('console', msg => {
+        console.log(`  Console ${msg.type()}: ${msg.text()}`);
       });
 
-      this.page.on('pageerror', (error) => {
-        console.error(`Page error: ${error.message}`);
+      this.page.on('pageerror', error => {
+        console.error(` Page Error: ${error.message}`);
       });
     }
 
@@ -89,5 +103,3 @@ export class BrowserManager {
     return this.page;
   }
 }
-
-export const browserManager = new BrowserManager();
