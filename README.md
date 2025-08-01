@@ -5,10 +5,11 @@ A comprehensive test automation framework for SauceDemo application using Playwr
 ## 🎯 Features
 
 - **TypeScript Support**: Fully typed for better IDE support and error catching
-- **Cucumber/Gherkin**: BDD approach with readable feature files
+- **Cucumber/Gherkin**: BDD approach with readable feature files  
 - **Page Object Model**: Organized and maintainable page classes
 - **DRY Principles**: Reusable components and utilities
 - **Cross-browser Testing**: Chrome, Firefox, and Safari support
+- **Visible Browser by Default**: Tests run with visible browser for better debugging experience
 - **Parallel Execution**: Run tests in parallel for faster execution
 - **Rich Reporting**: HTML and JSON reports with screenshots
 - **CI/CD Ready**: Configured for continuous integration
@@ -38,8 +39,10 @@ A comprehensive test automation framework for SauceDemo application using Playwr
 │   │   └── checkout.feature
 │   ├── step-definitions/ # Cucumber step definitions
 │   │   ├── common.steps.ts
+│   │   ├── login.steps.ts
 │   │   ├── inventory.steps.ts
-│   │   └── ...
+│   │   ├── cart.steps.ts
+│   │   └── checkout.steps.ts
 │   └── hooks/           # Test setup and teardown
 │       ├── World.ts
 │       └── hooks.ts
@@ -74,35 +77,72 @@ A comprehensive test automation framework for SauceDemo application using Playwr
    npx playwright install
    ```
 
+### Quick Start
+
+By default, tests run with a **visible browser** for better debugging experience. To run tests in headless mode, set `HEADED=false`.
+
+```bash
+# Run smoke tests with visible browser (default)
+npm test -- --tags "@smoke"
+
+# Run smoke tests in headless mode
+HEADED=false npm test -- --tags "@smoke"
+```
+
 ## 🧪 Running Tests
 
 ### Basic Commands
 
 ```bash
-# Run all tests
+# Run all tests (visible browser by default)
 npm test
 
-# Run tests in Chrome
+# Run tests in headless mode
+HEADED=false npm test
+
+# Run tests in Chrome (visible by default)
 npm run test:chrome
 
-# Run tests in Firefox
+# Run tests in Firefox (visible by default)
 npm run test:firefox
 
-# Run tests in Safari
+# Run tests in Safari (visible by default)  
 npm run test:safari
 
-# Run tests in headed mode (visible browser)
+# Run tests in headed mode (explicitly visible browser)
 npm run test:headed
 
-# Run tests in debug mode
+# Run tests in debug mode (visible browser + debugging features)
 npm run test:debug
 ```
 
-### Tag-based Execution
+### Additional Convenience Commands
 
 ```bash
-# Run only smoke tests
+# Convenient npm scripts for common test runs
+npm run test:smoke         # Run smoke tests (visible browser)
+npm run test:smoke:visible # Run smoke tests (explicitly visible browser)  
+npm run test:positive      # Run positive test cases
+npm run test:negative      # Run negative test cases
+npm run test:login         # Run login tests
+npm run test:login:visible # Run login tests (explicitly visible browser)
+npm run test:inventory     # Run inventory tests
+npm run test:cart          # Run cart tests
+npm run test:checkout      # Run checkout tests
+
+# Utility commands
+npm run clean              # Clean up reports, screenshots, videos
+npm run report             # Generate HTML report from JSON
+```
+
+### Tag-based Execution (Direct cucumber-js commands)
+
+```bash
+# Run only smoke tests (visible browser by default)
 npx cucumber-js --tags "@smoke"
+
+# Run smoke tests in headless mode
+HEADED=false npx cucumber-js --tags "@smoke"
 
 # Run only positive test cases
 npx cucumber-js --tags "@positive"
@@ -113,11 +153,17 @@ npx cucumber-js --tags "@login"
 # Run inventory tests
 npx cucumber-js --tags "@inventory"
 
+# Run cart tests  
+npx cucumber-js --tags "@cart"
+
 # Run checkout tests
 npx cucumber-js --tags "@checkout"
 
 # Exclude certain tags
 npx cucumber-js --tags "not @skip"
+
+# Run tests with multiple tags
+npx cucumber-js --tags "@smoke and @positive"
 ```
 
 ## 🎭 Test Scenarios Covered
@@ -171,8 +217,8 @@ Configure browser settings in `cucumber.js`:
 ```javascript
 worldParameters: {
   browser: 'chromium', // 'chromium', 'firefox', 'webkit'
-  headed: false,       // true for visible browser
-  debug: false,        // true for debug mode
+  headed: true,        // true for visible browser (default), false for headless
+  debug: false,        // true for debug mode with videos/traces
   baseUrl: 'https://www.saucedemo.com',
   viewport: '1920x1080',
   timeout: 30000
@@ -185,9 +231,9 @@ worldParameters: {
 # Browser selection
 BROWSER=firefox
 
-# Run mode
-HEADED=true
-DEBUG=true
+# Run mode (default is visible browser)
+HEADED=false      # Set to false for headless mode
+DEBUG=true        # Enable debug mode with videos/traces
 
 # URL configuration
 BASE_URL=https://www.saucedemo.com
