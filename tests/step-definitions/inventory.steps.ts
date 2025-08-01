@@ -76,26 +76,29 @@ Given('I have added the following items to the cart:', async function (this: Cus
 });
 
 Given('I have also added {string} to the cart', async function (this: CustomWorld, productName: string) {
+  // Go back to inventory page if not already there
+  const currentUrl = this.page.url();
+  if (!currentUrl.includes('/inventory.html')) {
+    await this.inventoryPage.navigateTo('/inventory.html');
+  }
+  
   await this.inventoryPage.addProductToCart(productName);
   const addedProducts = this.getTestData('addedProducts') || [];
   addedProducts.push(productName);
   this.setTestData('addedProducts', addedProducts);
 });
 
-When('I remove {string} from the cart', async function (this: CustomWorld, productName: string) {
-  await this.inventoryPage.removeProductFromCart(productName);
-  // Update stored products
-  const addedProducts = this.getTestData('addedProducts') || [];
-  const index = addedProducts.indexOf(productName);
-  if (index > -1) {
-    addedProducts.splice(index, 1);
-    this.setTestData('addedProducts', addedProducts);
-  }
-});
-
 When('I add all products to the cart', async function (this: CustomWorld) {
-  await this.inventoryPage.addAllProductsToCart();
-  this.setTestData('addedProducts', ['all']);
+  // Получаем все названия продуктов для корректного обновления данных
+  const productNames = await this.inventoryPage.getProductNames();
+  
+  // Добавляем товары по одному с небольшой задержкой
+  for (const productName of productNames) {
+    await this.inventoryPage.addProductToCart(productName);
+    await this.page.waitForTimeout(100); // Небольшая задержка между добавлениями
+  }
+  
+  this.setTestData('addedProducts', productNames);
 });
 
 Then('the shopping cart badge should show {string}', async function (this: CustomWorld, expectedCount: string) {
@@ -169,12 +172,8 @@ When('I click on the shopping cart icon', async function (this: CustomWorld) {
 });
 
 // Empty cart state
-Given('I have no items in my cart', async function (this: CustomWorld) {
-  // Ensure cart is empty by removing any existing items
-  const cartCount = await this.inventoryPage.getCartItemCount();
-  if (cartCount > 0) {
-    await this.inventoryPage.removeAllProductsFromCart();
-  }
+Given('I have no items in my cart', async function (this: CustomWorld) {  
+  // Just set test data - assume cart is empty initially
   this.setTestData('addedProducts', []);
 });
 

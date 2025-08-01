@@ -183,17 +183,6 @@ Then('the total should equal subtotal plus tax', async function (this: CustomWor
   await this.checkoutStepTwoPage.expectTotalToBeCorrect();
 });
 
-// Error message validation (reusing from common steps but context-specific)
-Then('I should see the error message {string}', async function (this: CustomWorld, expectedMessage: string) {
-  if (await this.checkoutStepOnePage.isPageLoaded()) {
-    await this.checkoutStepOnePage.expectErrorMessage(expectedMessage);
-  } else {
-    // Generic error message check
-    const errorElement = this.page.locator('[data-test="error"]');
-    await expect(errorElement).toHaveText(expectedMessage);
-  }
-});
-
 // Additional checkout validations
 Then('I should see payment and shipping information', async function (this: CustomWorld) {
   await this.checkoutStepTwoPage.expectPaymentInformationToBeVisible();

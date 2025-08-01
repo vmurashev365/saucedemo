@@ -47,6 +47,11 @@ Then('I should see all selected items with correct details', async function (thi
   }
 });
 
+Then('I should see {int} item in my cart', async function (this: CustomWorld, expectedCount: number) {
+  const actualCount = await this.cartPage.getCartItemCount();
+  expect(actualCount).toBe(expectedCount);
+});
+
 Then('I should only see {string} in my cart', async function (this: CustomWorld, productName: string) {
   await this.cartPage.expectCartToHaveItems(1);
   await this.cartPage.expectCartToContainItem(productName);
@@ -54,7 +59,16 @@ Then('I should only see {string} in my cart', async function (this: CustomWorld,
 
 // Cart manipulation steps
 When('I remove {string} from the cart', async function (this: CustomWorld, productName: string) {
-  await this.cartPage.removeItem(productName);
+  // Сначала убеждаемся что мы на правильной странице
+  const currentUrl = this.page.url();
+  
+  if (currentUrl.includes('/cart.html')) {
+    // Если мы на странице корзины, используем CartPage
+    await this.cartPage.removeItem(productName);
+  } else {
+    // Если мы на странице инвентаря, используем InventoryPage
+    await this.inventoryPage.removeProductFromCart(productName);
+  }
   
   // Update test data
   const addedProducts = this.getTestData('addedProducts') || [];

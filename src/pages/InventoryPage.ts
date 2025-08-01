@@ -126,8 +126,7 @@ export class InventoryPage extends BasePage {
     const count = await this.addToCartButtons.count();
     for (let i = 0; i < count; i++) {
       await this.clickElement(this.addToCartButtons.nth(i));
-      // Small delay to avoid overwhelming the UI
-      await this.page.waitForTimeout(100);
+      // Убираем задержку для быстрого выполнения в режиме отладки
     }
   }
 
@@ -135,7 +134,7 @@ export class InventoryPage extends BasePage {
     const count = await this.removeFromCartButtons.count();
     for (let i = 0; i < count; i++) {
       await this.clickElement(this.removeFromCartButtons.nth(i));
-      await this.page.waitForTimeout(100);
+      // Убираем задержку для быстрого выполнения в режиме отладки
     }
   }
 

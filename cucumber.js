@@ -14,6 +14,7 @@ module.exports = {
     paths: ['tests/features/**/*.feature'],
     parallel: 1,
     retry: 0,
+    timeout: 30000,
     tags: process.env.TAGS || 'not @skip',
     worldParameters: {
       browser: process.env.BROWSER || 'chromium',

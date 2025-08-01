@@ -38,7 +38,7 @@ export class CustomWorld extends World {
   private initializeConfig(): void {
     this.config = {
       browser: (this.parameters?.browser as 'chromium' | 'firefox' | 'webkit') || 'chromium',
-      headed: this.parameters?.headed || false,
+      headed: this.parameters?.headed !== false, // По умолчанию headed = true (браузер видимый)
       debug: this.parameters?.debug || false,
       baseUrl: this.parameters?.baseUrl || 'https://www.saucedemo.com',
       viewport: this.parameters?.viewport || '1920x1080',
