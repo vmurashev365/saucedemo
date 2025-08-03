@@ -63,8 +63,8 @@ A comprehensive test automation framework for SauceDemo application using Playwr
 
 1. **Clone the repository:**
    ```bash
-   git clone <repository-url>
-   cd saucedemo-playwright-cucumber
+   git clone https://github.com/vmurashev365/saucedemo.git
+   cd saucedemo
    ```
 
 2. **Install dependencies:**
