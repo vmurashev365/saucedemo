@@ -13,8 +13,8 @@ export class CheckoutStepOnePage extends BasePage {
   private readonly errorMessage: Locator;
   private readonly checkoutForm: Locator;
 
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page, baseUrl?: string) {
+    super(page, baseUrl);
 
     this.pageTitle = this.page.locator('.title');
     this.firstNameInput = this.getElementByTestId('firstName');

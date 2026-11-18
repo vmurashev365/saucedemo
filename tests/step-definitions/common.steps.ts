@@ -22,29 +22,16 @@ Given('I am on the inventory page', async function (this: CustomWorld) {
 
 Given('I am on the cart page', async function (this: CustomWorld) {
   await this.inventoryPage.clickShoppingCart();
-  
-  // Увеличиваем ожидание для загрузки страницы корзины
-  await this.page.waitForURL('**/cart.html', { timeout: 15000 });
-  await this.page.waitForLoadState('networkidle', { timeout: 15000 });
-  
-  // Проверяем, что мы на странице корзины, но без строгой проверки элементов
-  const currentUrl = this.page.url();
-  expect(currentUrl).toContain('/cart.html');
+  await this.cartPage.expectToBeOnCartPage();
 });
 
 // Login steps
 When('I login with username {string} and password {string}', async function (this: CustomWorld, username: string, password: string) {
   await this.loginPage.loginWithCredentials(username, password);
-  
-  // Special handling for performance_glitch_user - они медленно загружаются
-  if (username === 'performance_glitch_user') {
-    await this.page.waitForTimeout(10000); // Увеличиваем до 10 секунд для медленного пользователя
-    await this.page.waitForLoadState('networkidle', { timeout: 20000 }); // Дополнительное ожидание загрузки
-  }
 });
 
 Then('I should be redirected to the inventory page', async function (this: CustomWorld) {
-  await this.inventoryPage.expectToBeOnInventoryPage();
+  await this.inventoryPage.expectToBeOnInventoryPage(this.config.timeout);
 });
 
 Then('I should see the {string} page title', async function (this: CustomWorld, expectedTitle: string) {
@@ -88,13 +75,7 @@ Then('I should see {string} page title', async function (this: CustomWorld, expe
 });
 
 Then('I should be taken to the cart page', async function (this: CustomWorld) {
-  // Ждем загрузки страницы корзины с увеличенным таймаутом
-  await this.page.waitForURL('**/cart.html', { timeout: 15000 });
-  await this.page.waitForLoadState('networkidle', { timeout: 15000 });
-  
-  // Проверяем URL без строгой проверки элементов страницы
-  const currentUrl = this.page.url();
-  expect(currentUrl).toContain('/cart.html');
+  await this.cartPage.expectToBeOnCartPage();
 });
 
 Then('I should remain on the login page', async function (this: CustomWorld) {

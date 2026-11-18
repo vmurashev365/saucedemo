@@ -20,8 +20,8 @@ export class CartPage extends BasePage {
   private readonly itemQuantities: Locator;
   private readonly removeButtons: Locator;
 
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page, baseUrl?: string) {
+    super(page, baseUrl);
 
     // Header elements
     this.pageTitle = this.page.locator('.title');
@@ -29,7 +29,7 @@ export class CartPage extends BasePage {
     this.checkoutButton = this.getElementByTestId('checkout');
 
     // Cart content
-    this.cartContents = this.getElementByTestId('cart-contents');
+    this.cartContents = this.getElementByTestId('cart-contents-container');
     this.cartItems = this.page.locator('.cart_item');
     this.emptyCartMessage = this.page.locator('.cart_item:has-text("Your cart is empty")');
 
@@ -95,13 +95,11 @@ export class CartPage extends BasePage {
   }
 
   async expectCartToBeEmpty(): Promise<void> {
-    const itemCount = await this.getCartItemCount();
-    expect(itemCount).toBe(0);
+    await this.expectCartToHaveItems(0);
   }
 
   async expectCartToHaveItems(expectedCount: number): Promise<void> {
-    const itemCount = await this.getCartItemCount();
-    expect(itemCount).toBe(expectedCount);
+    await expect(this.cartItems).toHaveCount(expectedCount);
   }
 
   async expectCartToContainItem(itemName: string): Promise<void> {

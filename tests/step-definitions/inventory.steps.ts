@@ -75,27 +75,12 @@ Given('I have added the following items to the cart:', async function (this: Cus
   this.setTestData('addedProducts', products);
 });
 
-Given('I have also added {string} to the cart', async function (this: CustomWorld, productName: string) {
-  // Go back to inventory page if not already there
-  const currentUrl = this.page.url();
-  if (!currentUrl.includes('/inventory.html')) {
-    await this.inventoryPage.navigateTo('/inventory.html');
-  }
-  
-  await this.inventoryPage.addProductToCart(productName);
-  const addedProducts = this.getTestData('addedProducts') || [];
-  addedProducts.push(productName);
-  this.setTestData('addedProducts', addedProducts);
-});
-
 When('I add all products to the cart', async function (this: CustomWorld) {
-  // Получаем все названия продуктов для корректного обновления данных
   const productNames = await this.inventoryPage.getProductNames();
   
-  // Добавляем товары по одному с небольшой задержкой
   for (const productName of productNames) {
     await this.inventoryPage.addProductToCart(productName);
-    await this.page.waitForTimeout(100); // Небольшая задержка между добавлениями
+    await this.page.waitForTimeout(100);
   }
   
   this.setTestData('addedProducts', productNames);
@@ -179,4 +164,5 @@ Given('I have no items in my cart', async function (this: CustomWorld) {
 
 When('I navigate to the cart page', async function (this: CustomWorld) {
   await this.inventoryPage.clickShoppingCart();
+  await this.cartPage.expectToBeOnCartPage();
 });

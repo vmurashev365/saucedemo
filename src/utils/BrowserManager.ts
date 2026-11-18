@@ -8,14 +8,14 @@ export class BrowserManager {
 
   async launchBrowser(config: TestConfig): Promise<Browser> {
     const browserOptions = {
-      headless: !config.headed, // Учитываем настройку headed из конфигурации
-      slowMo: config.headed ? 300 : 0, // Замедление для видимого режима
+      headless: !config.headed,
+      slowMo: config.headed ? 300 : 0,
       timeout: 60000,
       args: config.headed ? [
         '--no-sandbox',
         '--disable-dev-shm-usage', 
         '--disable-web-security',
-        '--start-maximized', // Максимизированное окно для видимого режима
+        '--start-maximized',
         '--window-size=1920,1080'
       ] : [
         '--no-sandbox',
@@ -41,7 +41,7 @@ export class BrowserManager {
   async createContext(browser: Browser, config: TestConfig): Promise<BrowserContext> {
     const [width, height] = config.viewport.split('x').map(Number);
     
-    // Для headed режима используем null viewport (максимальный размер экрана)
+    // Let headed browsers use the native window size.
     const viewportSettings = config.headed ? null : { width, height };
     
     this.context = await browser.newContext({

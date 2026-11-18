@@ -24,8 +24,8 @@ export class InventoryPage extends BasePage {
   private readonly addToCartButtons: Locator;
   private readonly removeFromCartButtons: Locator;
 
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page, baseUrl?: string) {
+    super(page, baseUrl);
 
     // Header elements
     this.appLogo = this.page.locator('.app_logo');
@@ -58,10 +58,12 @@ export class InventoryPage extends BasePage {
     return await this.getText(this.pageTitle);
   }
 
-  async expectToBeOnInventoryPage(): Promise<void> {
-    await this.expectPageToHaveURL(`${this.baseUrl}/inventory.html`);
-    await this.expectElementToBeVisible(this.inventoryContainer);
-    await this.expectElementToHaveText(this.pageTitle, 'Products');
+  async expectToBeOnInventoryPage(timeout?: number): Promise<void> {
+    await Promise.all([
+      this.expectPageToHaveURL(`${this.baseUrl}/inventory.html`, timeout),
+      expect(this.inventoryContainer).toBeVisible({ timeout }),
+      expect(this.pageTitle).toHaveText('Products', { timeout })
+    ]);
   }
 
   // Cart methods
@@ -126,7 +128,6 @@ export class InventoryPage extends BasePage {
     const count = await this.addToCartButtons.count();
     for (let i = 0; i < count; i++) {
       await this.clickElement(this.addToCartButtons.nth(i));
-      // Убираем задержку для быстрого выполнения в режиме отладки
     }
   }
 
@@ -134,7 +135,6 @@ export class InventoryPage extends BasePage {
     const count = await this.removeFromCartButtons.count();
     for (let i = 0; i < count; i++) {
       await this.clickElement(this.removeFromCartButtons.nth(i));
-      // Убираем задержку для быстрого выполнения в режиме отладки
     }
   }
 

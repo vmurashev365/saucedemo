@@ -38,7 +38,7 @@ export class CustomWorld extends World {
   private initializeConfig(): void {
     this.config = {
       browser: (this.parameters?.browser as 'chromium' | 'firefox' | 'webkit') || 'chromium',
-      headed: this.parameters?.headed !== false, // По умолчанию headed = true (браузер видимый)
+      headed: this.parameters?.headed !== false,
       debug: this.parameters?.debug || false,
       baseUrl: this.parameters?.baseUrl || 'https://www.saucedemo.com',
       viewport: this.parameters?.viewport || '1920x1080',
@@ -56,12 +56,13 @@ export class CustomWorld extends World {
   }
 
   private initializePageObjects(): void {
-    this.loginPage = new LoginPage(this.page);
-    this.inventoryPage = new InventoryPage(this.page);
-    this.cartPage = new CartPage(this.page);
-    this.checkoutStepOnePage = new CheckoutStepOnePage(this.page);
-    this.checkoutStepTwoPage = new CheckoutStepTwoPage(this.page);
-    this.checkoutCompletePage = new CheckoutCompletePage(this.page);
+    const { baseUrl } = this.config;
+    this.loginPage = new LoginPage(this.page, baseUrl);
+    this.inventoryPage = new InventoryPage(this.page, baseUrl);
+    this.cartPage = new CartPage(this.page, baseUrl);
+    this.checkoutStepOnePage = new CheckoutStepOnePage(this.page, baseUrl);
+    this.checkoutStepTwoPage = new CheckoutStepTwoPage(this.page, baseUrl);
+    this.checkoutCompletePage = new CheckoutCompletePage(this.page, baseUrl);
   }
 
   async cleanup(): Promise<void> {
@@ -81,17 +82,12 @@ export class CustomWorld extends World {
     return key in this.testData;
   }
 
-  clearTestData(): void {
-    this.testData = {};
-  }
-
-  // Screenshot helper
-  async takeScreenshot(name: string): Promise<void> {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+  async takeScreenshot(name: string): Promise<Buffer> {
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
     const fileName = `${name}-${timestamp}.png`;
-    await this.page.screenshot({ 
+    return this.page.screenshot({
       path: `screenshots/${fileName}`,
-      fullPage: true 
+      fullPage: true
     });
   }
 

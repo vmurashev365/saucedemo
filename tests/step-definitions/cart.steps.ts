@@ -59,14 +59,12 @@ Then('I should only see {string} in my cart', async function (this: CustomWorld,
 
 // Cart manipulation steps
 When('I remove {string} from the cart', async function (this: CustomWorld, productName: string) {
-  // Сначала убеждаемся что мы на правильной странице
+  // Remove the item through the page currently displaying it.
   const currentUrl = this.page.url();
   
   if (currentUrl.includes('/cart.html')) {
-    // Если мы на странице корзины, используем CartPage
     await this.cartPage.removeItem(productName);
   } else {
-    // Если мы на странице инвентаря, используем InventoryPage
     await this.inventoryPage.removeProductFromCart(productName);
   }
   
@@ -125,15 +123,15 @@ Then('I should see {string} button', async function (this: CustomWorld, buttonTe
 // Cart state validation
 Then('my items should still be in the cart', async function (this: CustomWorld) {
   const addedProducts = this.getTestData('addedProducts') || [];
-  
-  if (addedProducts.length > 0) {
-    // Navigate to cart to verify
+  expect(addedProducts.length).toBeGreaterThan(0);
+
+  if (!this.page.url().endsWith('/cart.html')) {
     await this.inventoryPage.clickShoppingCart();
-    await this.cartPage.expectToBeOnCartPage();
-    
-    for (const productName of addedProducts) {
-      await this.cartPage.expectCartToContainItem(productName);
-    }
+  }
+  await this.cartPage.expectToBeOnCartPage();
+
+  for (const productName of addedProducts) {
+    await this.cartPage.expectCartToContainItem(productName);
   }
 });
 

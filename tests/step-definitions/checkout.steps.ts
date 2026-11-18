@@ -26,14 +26,6 @@ Given('I have completed a successful checkout', async function (this: CustomWorl
   await this.checkoutCompletePage.expectToBeOnCheckoutCompletePage();
 });
 
-Given('I have added multiple items with different prices to the cart', async function (this: CustomWorld) {
-  const products = ['Sauce Labs Backpack', 'Sauce Labs Bike Light', 'Sauce Labs Bolt T-Shirt'];
-  for (const product of products) {
-    await this.inventoryPage.addProductToCart(product);
-  }
-  this.setTestData('addedProducts', products);
-});
-
 // Checkout form filling steps
 When('I fill in the checkout information with valid details:', async function (this: CustomWorld, dataTable) {
   const data = dataTable.hashes()[0];
@@ -75,8 +67,7 @@ Then('I should see the correct subtotal and total amounts', async function (this
 });
 
 Then('I should see {int} items in the order summary', async function (this: CustomWorld, expectedCount: number) {
-  const actualCount = await this.checkoutStepTwoPage.getOrderItemCount();
-  expect(actualCount).toBe(expectedCount);
+  await this.checkoutStepTwoPage.expectOrderToHaveItems(expectedCount);
 });
 
 Then('I should see the correct total for multiple items', async function (this: CustomWorld) {
@@ -106,20 +97,6 @@ Then('I should be taken to the checkout overview page', async function (this: Cu
 
 Then('I should be taken to the checkout complete page', async function (this: CustomWorld) {
   await this.checkoutCompletePage.expectToBeOnCheckoutCompletePage();
-});
-
-Then('I should see {string} message', async function (this: CustomWorld, expectedMessage: string) {
-  if (expectedMessage.includes('Thank you')) {
-    const header = await this.checkoutCompletePage.getCompleteHeader();
-    expect(header).toContain('Thank you for your order!');
-  } else if (expectedMessage.includes('dispatched')) {
-    const text = await this.checkoutCompletePage.getCompleteText();
-    expect(text).toContain('Your order has been dispatched');
-  } else {
-    // Generic message check
-    const pageContent = await this.page.textContent('body');
-    expect(pageContent).toContain(expectedMessage);
-  }
 });
 
 // Cancel operations
@@ -176,7 +153,7 @@ Then('the subtotal should equal the sum of all item prices', async function (thi
 
 Then('the tax should be calculated correctly \\({int}% of subtotal)', async function (this: CustomWorld, taxPercentage: number) {
   const taxRate = taxPercentage / 100;
-  await this.checkoutStepTwoPage.expectTotalToBeCorrect(taxRate);
+  await this.checkoutStepTwoPage.expectTaxToBeCorrect(taxRate);
 });
 
 Then('the total should equal subtotal plus tax', async function (this: CustomWorld) {

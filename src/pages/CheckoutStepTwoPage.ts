@@ -23,8 +23,8 @@ export class CheckoutStepTwoPage extends BasePage {
   private readonly itemPrices: Locator;
   private readonly itemQuantities: Locator;
 
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page, baseUrl?: string) {
+    super(page, baseUrl);
 
     // Header elements
     this.pageTitle = this.page.locator('.title');
@@ -83,8 +83,8 @@ export class CheckoutStepTwoPage extends BasePage {
     return items;
   }
 
-  async getOrderItemCount(): Promise<number> {
-    return await this.getElementCount(this.cartItems);
+  async expectOrderToHaveItems(expectedCount: number): Promise<void> {
+    await expect(this.cartItems).toHaveCount(expectedCount);
   }
 
   async getSubtotal(): Promise<string> {
@@ -153,6 +153,12 @@ export class CheckoutStepTwoPage extends BasePage {
     expect(actualTotal).toBe(expectedTotal);
   }
 
+  async expectTaxToBeCorrect(taxRate: number): Promise<void> {
+    const expectedTax = await this.calculateExpectedTax(taxRate);
+    const actualTax = parseFloat((await this.getTax()).replace(/[^0-9.]/g, ''));
+    expect(actualTax).toBe(expectedTax);
+  }
+
   async expectFinishButtonToBeVisible(): Promise<void> {
     await this.expectElementToBeVisible(this.finishButton);
   }
@@ -170,9 +176,7 @@ export class CheckoutStepTwoPage extends BasePage {
   }
 
   async expectOrderSummaryToBeCorrect(expectedItemCount: number): Promise<void> {
-    const actualItemCount = await this.getOrderItemCount();
-    expect(actualItemCount).toBe(expectedItemCount);
-    
+    await this.expectOrderToHaveItems(expectedItemCount);
     await this.expectSubtotalToBeCorrect();
     await this.expectTotalToBeCorrect();
     await this.expectPaymentInformationToBeVisible();

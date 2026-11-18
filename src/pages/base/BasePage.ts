@@ -6,13 +6,12 @@ export abstract class BasePage {
 
   constructor(page: Page, baseUrl: string = 'https://www.saucedemo.com') {
     this.page = page;
-    this.baseUrl = baseUrl;
+    this.baseUrl = baseUrl.replace(/\/+$/, '');
   }
 
   // Common actions following DRY principles
   async navigateTo(path: string = ''): Promise<void> {
-    await this.page.goto(`${this.baseUrl}${path}`);
-    await this.waitForPageLoad();
+    await this.page.goto(`${this.baseUrl}${path}`, { waitUntil: 'domcontentloaded' });
   }
 
   async waitForPageLoad(): Promise<void> {
@@ -80,8 +79,8 @@ export abstract class BasePage {
     await expect(locator).toContainText(expectedText);
   }
 
-  async expectPageToHaveURL(expectedUrl: string): Promise<void> {
-    await expect(this.page).toHaveURL(expectedUrl);
+  async expectPageToHaveURL(expectedUrl: string, timeout?: number): Promise<void> {
+    await expect(this.page).toHaveURL(expectedUrl, { timeout });
   }
 
   async expectPageToHaveTitle(expectedTitle: string): Promise<void> {

@@ -1,375 +1,95 @@
-# SauceDemo Playwright TypeScript Cucumber Framework
+# SauceDemo QA portfolio
 
-A comprehensive test automation framework for SauceDemo application using Playwright, TypeScript, and Cucumber with Gherkin syntax, built following Page Object Model (POM) and DRY principles.
+Manual QA documentation and browser automation for the [SauceDemo storefront](https://www.saucedemo.com/). The sample covers authentication, product inventory, the shopping cart, and checkout.
 
-## 🎯 Features
+## Manual QA
 
-- **TypeScript Support**: Fully typed for better IDE support and error catching
-- **Cucumber/Gherkin**: BDD approach with readable feature files  
-- **Page Object Model**: Organized and maintainable page classes
-- **DRY Principles**: Reusable components and utilities
-- **Cross-browser Testing**: Chrome, Firefox, and Safari support
-- **Visible Browser by Default**: Tests run with visible browser for better debugging experience
-- **Parallel Execution**: Run tests in parallel for faster execution
-- **Rich Reporting**: HTML and JSON reports with screenshots
-- **CI/CD Ready**: Configured for continuous integration
+| Artifact | What it covers |
+| --- | --- |
+| [User story mapping](test_documents/User%20Story%20Mapping%20-%20SauceDemo.pdf) | Customer journeys across the storefront |
+| [Test strategy](test_documents/Test%20Strategy%20Document%20-%20SauceDemo.pdf) | Test scope, approach, and priorities |
+| [Manual test cases](test_documents/Test%20Cases%20-%20SauceDemo%20E-commerce%20Platform.pdf) | Test steps and expected results |
+| [Original automation results](test_documents/baseline-2025-08/README.md) | August 2025 run results, failure details, and original evidence |
 
-## 🏗️ Project Structure
+## Automation
 
-```
-├── src/
-│   ├── pages/           # Page Object Model classes
-│   │   ├── base/        # Base page class
-│   │   ├── LoginPage.ts
-│   │   ├── InventoryPage.ts
-│   │   ├── CartPage.ts
-│   │   └── ...
-│   ├── utils/           # Utility classes
-│   │   ├── BrowserManager.ts
-│   │   └── DataHelper.ts
-│   ├── types/           # TypeScript type definitions
-│   │   └── index.ts
-│   └── fixtures/        # Test data
-│       └── testData.json
-├── tests/
-│   ├── features/        # Gherkin feature files
-│   │   ├── login.feature
-│   │   ├── inventory.feature
-│   │   ├── cart.feature
-│   │   └── checkout.feature
-│   ├── step-definitions/ # Cucumber step definitions
-│   │   ├── common.steps.ts
-│   │   ├── login.steps.ts
-│   │   ├── inventory.steps.ts
-│   │   ├── cart.steps.ts
-│   │   └── checkout.steps.ts
-│   └── hooks/           # Test setup and teardown
-│       ├── World.ts
-│       └── hooks.ts
-├── reports/             # Test reports (generated)
-├── screenshots/         # Test screenshots (generated)
-└── videos/              # Test videos (generated)
+Cucumber 13.3.0 runs the Gherkin features. Playwright 1.65.1 drives the browser and provides assertions. TypeScript 7.0.2 checks the test code, and tsx loads it at runtime. Page objects live in [src/pages](src/pages), with Cucumber step definitions and hooks under [tests](tests).
+
+| Feature | Scenarios after expanding Examples | Coverage |
+| --- | ---: | --- |
+| [Authentication](tests/features/login.feature) | 10 | Valid accounts, locked-out users, invalid credentials, and required fields |
+| [Inventory](tests/features/inventory.feature) | 11 | Product details, sorting, and cart badge updates |
+| [Cart](tests/features/cart.feature) | 8 | Contents, quantities, item removal, and navigation |
+| [Checkout](tests/features/checkout.feature) | 10 | Order completion, totals, form validation, and cancellation |
+| **Total** | **39** | |
+
+### Install and verify
+
+Use Node.js 24.x, npm, and Git. Run these commands from the repository root.
+
+```sh
+npm ci
+npm run typecheck
+npm run bdd:dry
+npx playwright install
+npm run test:smoke
 ```
 
-## 🚀 Getting Started
+The dry run checks that Cucumber can load the support code and match all scenario steps. A successful full dry run lists 39 skipped scenarios because it skips browser actions. The smoke command launches a browser and checks four scenarios against SauceDemo. On Linux CI, use `npx playwright install --with-deps` to install browser binaries and system dependencies.
 
-### Prerequisites
+### Run modes
 
-- Node.js (v16 or higher)
-- npm or yarn
-- Git
+The default is headed Chromium. Use `HEADED=false` for headless execution.
 
-### Installation
+| Command | Mode |
+| --- | --- |
+| `npm test` | Full suite using the configured browser |
+| `npm run test:chrome` | Playwright Chromium |
+| `npm run test:firefox` | Playwright Firefox |
+| `npm run test:safari` | Playwright WebKit, the engine used by Safari |
+| `npm run test:headed` or `npm run test:visible` | Explicitly headed |
+| `npm run test:debug` | Headed with page console output, video, and HAR |
+| `npm run test:smoke` or `npm run test:smoke:visible` | Smoke scenarios, optionally forced headed |
+| `npm run test:login` or `npm run test:login:visible` | Authentication scenarios, optionally forced headed |
+| `npm run test:positive`, `npm run test:negative` | Positive or negative scenarios |
+| `npm run test:inventory`, `npm run test:cart`, `npm run test:checkout` | Individual feature areas |
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/vmurashev365/saucedemo.git
-   cd saucedemo
-   ```
+Pass extra Cucumber options after `--`. The standard tag expression is `not @skip`. `TAGS` supplies an alternative base expression, and a CLI tag filter is combined with it.
 
-2. **Install dependencies:**
-   ```bash
-   npm install
-   ```
-
-3. **Install Playwright browsers:**
-   ```bash
-   npx playwright install
-   ```
-
-### Quick Start
-
-By default, tests run with a **visible browser** for better debugging experience. To run tests in headless mode, set `HEADED=false`.
-
-```bash
-# Run smoke tests with visible browser (default)
-npm test -- --tags "@smoke"
-
-# Run smoke tests in headless mode
-HEADED=false npm test -- --tags "@smoke"
+```sh
+npm test -- --tags "@smoke and @positive"
+npx cucumber-js --tags "@e2e"
+npx cucumber-js --profile file tests/features/login.feature
 ```
 
-## 🧪 Running Tests
+Use `--profile file` for a feature path or line selection. Cucumber 13 combines CLI paths with the configured glob under the default profile. [Cucumber path configuration](https://github.com/cucumber/cucumber-js/blob/v13.3.0/docs/deprecations.md#paths-in-configuration-and-cli)
 
-### Basic Commands
+For a headless run in PowerShell:
 
-```bash
-# Run all tests (visible browser by default)
+```powershell
+$env:HEADED = 'false'
 npm test
+Remove-Item Env:HEADED
+```
 
-# Run tests in headless mode
+For Bash or a POSIX shell:
+
+```sh
 HEADED=false npm test
-
-# Run tests in Chrome (visible by default)
-npm run test:chrome
-
-# Run tests in Firefox (visible by default)
-npm run test:firefox
-
-# Run tests in Safari (visible by default)  
-npm run test:safari
-
-# Run tests in headed mode (explicitly visible browser)
-npm run test:headed
-
-# Run tests in debug mode (visible browser + debugging features)
-npm run test:debug
 ```
 
-### Additional Convenience Commands
-
-```bash
-# Convenient npm scripts for common test runs
-npm run test:smoke         # Run smoke tests (visible browser)
-npm run test:smoke:visible # Run smoke tests (explicitly visible browser)  
-npm run test:positive      # Run positive test cases
-npm run test:negative      # Run negative test cases
-npm run test:login         # Run login tests
-npm run test:login:visible # Run login tests (explicitly visible browser)
-npm run test:inventory     # Run inventory tests
-npm run test:cart          # Run cart tests
-npm run test:checkout      # Run checkout tests
-
-# Utility commands
-npm run clean              # Clean up reports, screenshots, videos
-npm run report             # Generate HTML report from JSON
-```
-
-### Tag-based Execution (Direct cucumber-js commands)
-
-```bash
-# Run only smoke tests (visible browser by default)
-npx cucumber-js --tags "@smoke"
-
-# Run smoke tests in headless mode
-HEADED=false npx cucumber-js --tags "@smoke"
-
-# Run only positive test cases
-npx cucumber-js --tags "@positive"
-
-# Run login tests
-npx cucumber-js --tags "@login"
-
-# Run inventory tests
-npx cucumber-js --tags "@inventory"
-
-# Run cart tests  
-npx cucumber-js --tags "@cart"
-
-# Run checkout tests
-npx cucumber-js --tags "@checkout"
-
-# Exclude certain tags
-npx cucumber-js --tags "not @skip"
-
-# Run tests with multiple tags
-npx cucumber-js --tags "@smoke and @positive"
-```
-
-## 🎭 Test Scenarios Covered
-
-### Authentication (`@login`)
-- ✅ Successful login with valid credentials
-- ✅ Login with different user types
-- ❌ Locked out user handling
-- ❌ Invalid credentials validation
-- ❌ Empty field validations
-
-### Product Inventory (`@inventory`)
-- ✅ Product display and information
-- ✅ Add/remove products to/from cart
-- ✅ Product sorting (A-Z, Z-A, Price)
-- ✅ Shopping cart badge updates
-- ✅ Product navigation
-
-### Shopping Cart (`@cart`)
-- ✅ View cart contents
-- ✅ Remove items from cart
-- ✅ Continue shopping functionality
-- ✅ Proceed to checkout
-- ✅ Empty cart handling
-
-### Checkout Process (`@checkout`)
-- ✅ Complete end-to-end checkout
-- ✅ Order summary validation
-- ✅ Price calculations
-- ❌ Form validation errors
-- ✅ Checkout cancellation
-- ✅ Order completion confirmation
-
-## 🏷️ Test Tags
-
-- `@smoke` - Critical functionality tests
-- `@positive` - Happy path scenarios
-- `@negative` - Error handling scenarios
-- `@e2e` - End-to-end user journeys
-- `@login` - Authentication tests
-- `@inventory` - Product management tests
-- `@cart` - Shopping cart tests
-- `@checkout` - Checkout process tests
-
-## 🔧 Configuration
-
-### Browser Configuration
-
-Configure browser settings in `cucumber.js`:
-
-```javascript
-worldParameters: {
-  browser: 'chromium', // 'chromium', 'firefox', 'webkit'
-  headed: true,        // true for visible browser (default), false for headless
-  debug: false,        // true for debug mode with videos/traces
-  baseUrl: 'https://www.saucedemo.com',
-  viewport: '1920x1080',
-  timeout: 30000
-}
-```
-
-### Environment Variables
-
-```bash
-# Browser selection
-BROWSER=firefox
-
-# Run mode (default is visible browser)
-HEADED=false      # Set to false for headless mode
-DEBUG=true        # Enable debug mode with videos/traces
-
-# URL configuration
-BASE_URL=https://www.saucedemo.com
-
-# Viewport
-VIEWPORT=1920x1080
-
-# Timeout
-TIMEOUT=30000
-
-# Test tags
-TAGS="@smoke and not @skip"
-```
-
-## 📊 Reporting
-
-The framework generates multiple types of reports:
-
-1. **Console Output**: Real-time test execution feedback
-2. **JSON Report**: `reports/cucumber-report.json`
-3. **HTML Report**: `reports/cucumber-report.html`
-4. **Screenshots**: Captured on test failures in `screenshots/`
-5. **Videos**: Test execution videos in `videos/` (debug mode)
-
-### Generating Reports
-
-```bash
-# Generate HTML report from JSON
-npm run report
-```
-
-## 🛠️ Development
-
-### Writing New Tests
-
-1. **Create a feature file** in `tests/features/`:
-   ```gherkin
-   @tag
-   Feature: Feature Name
-     Scenario: Test scenario
-       Given I am on the login page
-       When I perform an action
-       Then I should see expected result
-   ```
-
-2. **Implement step definitions** in `tests/step-definitions/`:
-   ```typescript
-   import { Given, When, Then } from '@cucumber/cucumber';
-   import { CustomWorld } from '../hooks/World';
-
-   Given('I am on the login page', async function (this: CustomWorld) {
-     await this.loginPage.navigateTo();
-   });
-   ```
-
-3. **Add page objects** in `src/pages/` if needed:
-   ```typescript
-   export class NewPage extends BasePage {
-     // Page-specific methods
-   }
-   ```
-
-### Best Practices
-
-1. **Follow POM**: Keep page-specific logic in page classes
-2. **Use TypeScript**: Leverage type safety and IDE support
-3. **DRY Principle**: Reuse common functionality
-4. **Descriptive Names**: Use clear, readable step definitions
-5. **Error Handling**: Implement proper error handling and assertions
-6. **Data Management**: Use fixtures for test data
-7. **Screenshots**: Capture screenshots on failures for debugging
-
-## 🐛 Debugging
-
-### Debug Mode
-
-```bash
-# Run in debug mode
-DEBUG=true npm test
-
-# Run specific test in debug mode
-DEBUG=true npx cucumber-js tests/features/login.feature
-```
-
-### IDE Debugging
-
-1. Set breakpoints in your TypeScript code
-2. Run debug configuration in VS Code
-3. Step through test execution
-
-### Common Issues
-
-1. **Element not found**: Check selectors and wait conditions
-2. **Timing issues**: Increase timeout or add explicit waits
-3. **Cross-browser issues**: Test on different browsers
-4. **Data dependencies**: Ensure test data is properly set up
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Write tests following existing patterns
-4. Ensure all tests pass
-5. Submit a pull request
-
-## 📝 Test Data
-
-Test users available in SauceDemo:
-
-- `standard_user` - Normal user
-- `locked_out_user` - Blocked user
-- `problem_user` - User with UI issues
-- `performance_glitch_user` - Slow user
-- `error_user` - User with errors
-- `visual_user` - Visual testing user
-
-Password for all users: `secret_sauce`
-
-## 🚀 CI/CD Integration
-
-The framework is ready for CI/CD integration with:
-
-- GitHub Actions
-- Jenkins
-- Azure DevOps
-- CircleCI
-
-Example GitHub Actions workflow included in `.github/workflows/`.
-
-## 📚 Resources
-
-- [Playwright Documentation](https://playwright.dev/)
-- [Cucumber.js Documentation](https://cucumber.io/docs/cucumber/)
-- [TypeScript Documentation](https://www.typescriptlang.org/)
-- [SauceDemo Application](https://www.saucedemo.com/)
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+| Environment variable | Default | Effect |
+| --- | --- | --- |
+| `BROWSER` | `chromium` | Selects `chromium`, `firefox`, or `webkit` |
+| `HEADED` | `true` | Set to `false` to run headless |
+| `DEBUG` | `false` | Set to `true` to record diagnostics |
+| `BASE_URL` | `https://www.saucedemo.com` | Selects the SauceDemo deployment |
+| `VIEWPORT` | `1920x1080` | Sets the headless viewport |
+| `TIMEOUT` | `30000` | Sets the default step, hook, and page timeout in milliseconds |
+| `TAGS` | `not @skip` | Sets the base Cucumber tag expression |
+
+### Reports
+
+Each Cucumber invocation prints a console summary and writes `reports/cucumber-report.html` and `reports/cucumber-report.json`. Open the HTML file in a browser. Browser failures with an open page include a screenshot in the HTML and under `screenshots/`. Debug runs also write videos under `videos/` and the latest HAR at `har/trace.har`.
+
+The former `npm run report` command is replaced by automatic HTML generation. Run `npm test` for browser results or `npm run bdd:dry` for a step-discovery report. Each run overwrites the preceding reports. `npm run clean` removes the generated `reports/`, `screenshots/`, and `videos/` directories.

@@ -13,8 +13,8 @@ export class LoginPage extends BasePage {
   private readonly acceptedUsernames: Locator;
   private readonly passwordForAllUsers: Locator;
 
-  constructor(page: Page) {
-    super(page);
+  constructor(page: Page, baseUrl?: string) {
+    super(page, baseUrl);
     
     // Initialize locators using SauceDemo's data-test attributes
     this.usernameInput = this.getElementByTestId('username');
