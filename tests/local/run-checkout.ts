@@ -89,17 +89,23 @@ async function runCase(variant: FixtureCase): Promise<void> {
     const checkedSteps = Object.fromEntries(requiredPasses.map(name => [name,
       steps.filter(step => step.name === name).map(step => step.result.status)]));
     const totalsAfterTax = steps.filter(step => step.name === totalStep).map(step => step.result.status);
+    const attachments = steps.flatMap(step => step.embeddings ?? []);
+    const images = attachments.filter(item => item.mime_type === 'image/png');
+    const metadata = attachments.find(item => item.mime_type === 'application/json');
+    const evidence: { screenshot?: string; trace?: string } | undefined = metadata
+      && JSON.parse(Buffer.from(metadata.data, 'base64').toString('utf8'));
     await writeFile(join(reportDir, 'checks.json'), JSON.stringify({
       variant, baseUrl, code, signal, scenarios: scenarios.map(scenario => scenario.name), failures,
-      checkedSteps, totalsAfterTax, visitedPaths: [...requests]
+      checkedSteps, totalsAfterTax, visitedPaths: [...requests], evidence
     }, null, 2) + '\n');
 
     assert.equal(code, expectations[variant].code);
     assert.deepEqual(failures, expectations[variant].failures);
+    assert.equal(images.length, code === 1 ? 1 : 0);
     if (code === 1) {
-      const screenshot = steps.flatMap(step => step.embeddings ?? []).find(item => item.mime_type === 'image/png');
-      assert(screenshot, 'Expected a screenshot of the failed assertion');
-      await writeFile(join(reportDir, 'failure.png'), Buffer.from(screenshot.data, 'base64'));
+      assert(evidence?.screenshot && evidence.trace, 'Expected failure screenshot and trace paths');
+      assert.deepEqual(await readFile(join(reportDir, evidence.screenshot)), Buffer.from(images[0].data, 'base64'));
+      assert.equal((await readFile(join(reportDir, evidence.trace))).subarray(0, 4).toString('hex'), '504b0304');
     }
     assert.equal(scenarios.length, variant === 'correct' ? 2 : 1);
     for (const [name, statuses] of Object.entries(checkedSteps)) {

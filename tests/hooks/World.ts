@@ -19,6 +19,8 @@ export class CustomWorld extends World {
   public page!: Page;
   public config!: TestConfig;
   public browserManager!: BrowserManager;
+  public tracing = false;
+  public traceGroupOpen = false;
 
   // Page Objects
   public loginPage!: LoginPage;
@@ -50,6 +52,12 @@ export class CustomWorld extends World {
   async init(): Promise<void> {
     this.browser = await this.browserManager.launchBrowser(this.config);
     this.context = await this.browserManager.createContext(this.browser, this.config);
+    try {
+      await this.context.tracing.start({ screenshots: true, snapshots: true });
+      this.tracing = true;
+    } catch (error) {
+      this.log(`Could not start Playwright tracing: ${error}`);
+    }
     this.page = await this.browserManager.createPage(this.context, this.config);
     
     // Initialize page objects
@@ -84,15 +92,6 @@ export class CustomWorld extends World {
 
   async cleanup(): Promise<void> {
     await this.browserManager.closeBrowser();
-  }
-
-  async takeScreenshot(name: string): Promise<Buffer> {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `${name}-${timestamp}.png`;
-    return this.page.screenshot({
-      path: `screenshots/${fileName}`,
-      fullPage: true
-    });
   }
 
   // Navigation helpers

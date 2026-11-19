@@ -75,20 +75,21 @@ export class BrowserManager {
   }
 
   async closeBrowser(): Promise<void> {
-    if (this.page) {
-      await this.page.close();
-      this.page = null;
-    }
+    // Closing the context closes its pages and flushes video and HAR files.
+    const resources = [this.context, this.browser];
+    this.page = null;
+    this.context = null;
+    this.browser = null;
 
-    if (this.context) {
-      await this.context.close();
-      this.context = null;
+    const errors: unknown[] = [];
+    for (const resource of resources) {
+      try {
+        await resource?.close();
+      } catch (error) {
+        errors.push(error);
+      }
     }
-
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
-    }
+    if (errors.length) throw new AggregateError(errors, 'Browser cleanup failed');
   }
 
   getBrowser(): Browser | null {

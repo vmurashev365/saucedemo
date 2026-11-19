@@ -1,6 +1,22 @@
 # SauceDemo QA portfolio
 
-Manual QA documentation and browser automation for the [SauceDemo storefront](https://www.saucedemo.com/). The sample covers authentication, product inventory, the shopping cart, and checkout.
+Manual QA and browser automation for the [SauceDemo storefront](https://www.saucedemo.com/). Follow two checkout cases from the written requirement to the browser result.
+
+| Case | Manual case | Automation | Observed result |
+| --- | --- | --- | --- |
+| TC-045 · Cancel from information | [PDF, pp. 23–24](test_documents/Test%20Cases%20-%20SauceDemo%20E-commerce%20Platform.pdf#page=23) | [Scenario](tests/features/checkout.feature#L77-L81) · [Cart assertion](src/pages/CartPage.ts#L50-L54) | Returned directly to the cart with both items. [Browser screenshot](test_documents/checkout-evidence/cancel-information-after.png) |
+| TC-046 · Cancel from overview | [PDF, p. 25](test_documents/Test%20Cases%20-%20SauceDemo%20E-commerce%20Platform.pdf#page=25) | [Scenario](tests/features/checkout.feature#L83-L88) · [Cart assertion](src/pages/CartPage.ts#L50-L54) | Returned to Products. The manual case expects the cart. [Browser screenshot](test_documents/checkout-evidence/cancel-overview-after.png) |
+
+[Short QA note with reproduction steps and evidence](test_documents/checkout-cancel-qa-note.md)
+
+## Sample reports
+
+| Run | Repository screenshot | Download |
+| --- | --- | --- |
+| Live Chromium smoke · 4 of 4 passed | [Screenshot of the Cucumber report](test_documents/portfolio/smoke-report.png) | [HTML report in ZIP](test_documents/portfolio/smoke-report.zip?raw=1) |
+| Controlled tax failure · local fixture | [Screenshot of the failed tax assertion](test_documents/portfolio/controlled-tax-report.png) | [HTML report and Playwright trace in ZIP](test_documents/portfolio/controlled-tax-report.zip?raw=1) |
+
+Extract either ZIP and open `cucumber-report.html` locally. The screenshots are static previews. The controlled fixture deliberately changes the displayed tax from $3.20 to $9.99. It runs separately from live regression.
 
 ## Manual QA
 
@@ -32,11 +48,20 @@ Use Node.js 24.x, npm, and Git. Run these commands from the repository root.
 npm ci
 npm run typecheck
 npm run bdd:dry
-npx playwright install
-npm run test:smoke
+npx playwright install chromium
+npm run test:smoke:headless
+npm run test:full:headless
 ```
 
-The dry run checks that Cucumber can load the support code and match all scenario steps. A successful full dry run lists 39 skipped scenarios because it skips browser actions. The smoke command launches a browser and checks four scenarios against SauceDemo. On Linux CI, use `npx playwright install --with-deps` to install browser binaries and system dependencies.
+The dry run checks discovery of 39 scenarios without browser actions. The smoke command runs four live scenarios. The full command runs all 39, including the two [documented SauceDemo discrepancies](test_documents/checkout-review.md) that currently cause an exit code of 1. The [GitHub Actions workflow](.github/workflows/qa.yml) runs smoke on pull requests and the full suite on manual dispatch.
+
+### Controlled failure demo
+
+```sh
+npm run test:checkout:controls
+```
+
+This command checks two deliberate local failures. The wrapper exits 0 after confirming the exact assertion and child exit code 1 for each. Its reports are under `reports/business/local/`.
 
 ### Run modes
 
@@ -105,6 +130,6 @@ The first command exercises the normal cart, overview, and completion steps. The
 
 ### Reports
 
-Each Cucumber invocation prints a console summary and writes `reports/cucumber-report.html` and `reports/cucumber-report.json`. Open the HTML file in a browser. Browser failures with an open page include a screenshot in the HTML and under `screenshots/`. Debug runs also write videos under `videos/` and the latest HAR at `har/trace.har`.
+Each Cucumber invocation prints a console summary and writes HTML and JSON reports. The headless commands use `reports/smoke/` and `reports/full/`. On failure, a single screenshot is saved under the run's `screenshots/` and its exact bytes are embedded in the report. Playwright traces group actions by Gherkin step and are saved under the run's `traces/`. Open a ZIP with `npx playwright show-trace <path-to-trace.zip>`. Debug runs also write videos under `videos/` and the latest HAR at `har/trace.har`.
 
 The former `npm run report` command is replaced by automatic HTML generation. Run `npm test` for browser results or `npm run bdd:dry` for a step-discovery report. Each run overwrites the preceding reports. `npm run clean` removes the generated `reports/`, `screenshots/`, and `videos/` directories.
