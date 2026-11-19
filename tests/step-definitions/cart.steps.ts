@@ -19,6 +19,10 @@ Then('checkout should be unavailable with an empty cart', async function (this: 
   await this.cartPage.expectCheckoutUnavailable();
 });
 
+Then('Continue Shopping should be enabled in the cart', async function (this: CustomWorld) {
+  await this.cartPage.expectContinueShoppingButtonToBeEnabled();
+});
+
 Then('I should see {int} items in my cart', async function (this: CustomWorld, expectedCount: number) {
   await this.cartPage.expectCartToHaveItems(expectedCount);
 });
@@ -102,6 +106,8 @@ Then('my items should still be in the cart', async function (this: CustomWorld) 
 });
 
 Then('the shopping cart should be empty', async function (this: CustomWorld) {
-  const cartBadge = this.page.locator('[data-test="shopping-cart-badge"]');
-  await expect(cartBadge).not.toBeVisible();
+  await this.inventoryPage.expectCartBadgeToShow(0);
+  await this.inventoryPage.clickShoppingCart();
+  await this.cartPage.expectToBeOnCartPage();
+  await this.cartPage.expectCartToBeEmpty();
 });

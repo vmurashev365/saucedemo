@@ -74,19 +74,6 @@ Feature: Checkout Process
       Then I should see the error message "Error: First Name is required"
       And I should remain on the checkout step one page
 
-    @positive @TC-045
-    Scenario: Cancel checkout from step one
-      When I click "Cancel" on the checkout step one page
-      Then I should be redirected to the cart page
-      And my items should still be in the cart
-
-    @positive @TC-046 @known-spec-discrepancy
-    Scenario: Cancel checkout from overview page
-      Given I have filled in valid checkout information and proceeded to overview
-      When I click "Cancel" on the checkout overview page
-      Then I should be redirected to the cart page
-      And my items should still be in the cart
-
   Rule: Checkout with multiple items
     Background:
       Given I have added the following items to the cart:
@@ -109,6 +96,19 @@ Feature: Checkout Process
       And the total should equal subtotal plus tax
       When I click "Finish" on checkout page
       Then I should see the order completion confirmation
+
+    @positive @TC-045
+    Scenario: Cancel checkout from step one
+      When I click "Cancel" on the checkout step one page
+      Then I should be redirected to the cart page
+      And my items should still be in the cart
+
+    @positive @TC-046 @known-spec-discrepancy
+    Scenario: Cancel checkout from overview page
+      Given I have filled in valid checkout information and proceeded to overview
+      When I click "Cancel" on the checkout overview page
+      Then I should be redirected to the cart page
+      And my items should still be in the cart
 
     @positive @TC-047
     Scenario: Verify order summary calculations

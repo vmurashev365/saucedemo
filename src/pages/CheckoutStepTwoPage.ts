@@ -43,7 +43,7 @@ export class CheckoutStepTwoPage extends BasePage {
 
   async expectSelectedItems(selection: readonly SelectedItem[]): Promise<void> {
     await this.expectToBeOnCheckoutStepTwoPage();
-    assertSelectedItems('Checkout overview', selection, await this.readItemRows(this.cartItems));
+    assertSelectedItems('Checkout overview', selection, await this.readItemRows('Checkout overview', this.cartItems));
   }
 
   async expectActionsAvailable(): Promise<void> {

@@ -4,8 +4,8 @@ Manual QA and browser automation for the [SauceDemo storefront](https://www.sauc
 
 | Case | Manual case | Automation | Observed result |
 | --- | --- | --- | --- |
-| TC-045 · Cancel from information | [PDF, pp. 23–24](test_documents/Test%20Cases%20-%20SauceDemo%20E-commerce%20Platform.pdf#page=23) | [Scenario](tests/features/checkout.feature#L77-L81) · [Cart assertion](src/pages/CartPage.ts#L50-L54) | Returned directly to the cart with both items. [Browser screenshot](test_documents/checkout-evidence/cancel-information-after.png) |
-| TC-046 · Cancel from overview | [PDF, p. 25](test_documents/Test%20Cases%20-%20SauceDemo%20E-commerce%20Platform.pdf#page=25) | [Scenario](tests/features/checkout.feature#L83-L88) · [Cart assertion](src/pages/CartPage.ts#L50-L54) | Returned to Products. The manual case expects the cart. [Browser screenshot](test_documents/checkout-evidence/cancel-overview-after.png) |
+| TC-045 · Cancel from information | [PDF, pp. 23–24](test_documents/Test%20Cases%20-%20SauceDemo%20E-commerce%20Platform.pdf#page=23) | [Scenario](tests/features/checkout.feature#L100-L104) · [Cart assertion](src/pages/CartPage.ts#L50-L54) | Returned directly to the cart with both items. [Browser screenshot](test_documents/checkout-evidence/cancel-information-after.png) |
+| TC-046 · Cancel from overview | [PDF, p. 25](test_documents/Test%20Cases%20-%20SauceDemo%20E-commerce%20Platform.pdf#page=25) | [Scenario](tests/features/checkout.feature#L106-L111) · [Cart assertion](src/pages/CartPage.ts#L50-L54) | Returned to Products. The manual case expects the cart. [Browser screenshot](test_documents/checkout-evidence/cancel-overview-after.png) |
 
 [Short QA note with reproduction steps and evidence](test_documents/checkout-cancel-qa-note.md)
 
@@ -53,15 +53,7 @@ npm run test:smoke:headless
 npm run test:full:headless
 ```
 
-The dry run checks discovery of 39 scenarios without browser actions. The smoke command runs four live scenarios. The full command runs all 39, including the two [documented SauceDemo discrepancies](test_documents/checkout-review.md) that currently cause an exit code of 1. The [GitHub Actions workflow](.github/workflows/qa.yml) runs smoke on pull requests and the full suite on manual dispatch.
-
-### Controlled failure demo
-
-```sh
-npm run test:checkout:controls
-```
-
-This command checks two deliberate local failures. The wrapper exits 0 after confirming the exact assertion and child exit code 1 for each. Its reports are under `reports/business/local/`.
+The dry run checks discovery of 39 scenarios without browser actions. The smoke command runs four live scenarios and fails if its Cucumber invocation collects zero `@smoke` scenarios. The full command runs all 39, including the two documented SauceDemo discrepancies that currently cause exit code 1. The workflow runs guarded smoke on pull requests, runs the full suite on manual dispatch, and uploads available reports on failure. [Cart and checkout review](test_documents/checkout-review.md) · [GitHub Actions workflow](.github/workflows/qa.yml)
 
 ### Run modes
 
@@ -117,7 +109,7 @@ HEADED=false npm test
 
 ### Checkout verification
 
-The live suite checks the documented behavior. Two scenarios currently tagged `@known-spec-discrepancy` fail against SauceDemo. Checkout is enabled with an empty cart, and Cancel on the overview returns to Products. To run the remaining live scenarios, use `npm test -- --tags "not @known-spec-discrepancy"`.
+The live suite checks the documented behavior. TC-031 verifies that Continue Shopping opens Products and checks empty-cart Checkout availability in a second scenario. SauceDemo enables Checkout with an empty cart and sends Cancel on the checkout overview to Products. Both scenarios are tagged `@known-spec-discrepancy`. To run the remaining live scenarios, use `npm test -- --tags "not @known-spec-discrepancy"`.
 
 Run the checkout controls against an isolated loopback fixture with Chromium installed.
 
@@ -126,7 +118,7 @@ npm run test:checkout:local
 npm run test:checkout:controls
 ```
 
-The first command exercises the normal cart, overview, and completion steps. The second checks invalid input messages and runs two deliberately failing browser cases. It verifies the exact Cucumber step, error message, and child exit code for each. The wrapper exits successfully when both failures match. Reports are written under `reports/business/local/`.
+The first command runs seven scenarios with correct fixture behavior, including both two-item cancellations, cart clearing after Back Home, and both empty-cart behaviors. The second runs deliberate browser failures for row visibility and price, tax, cancellation retention, post-order cart contents, and a disabled Continue Shopping button. It also exercises the smoke command on the failing TC-031 scenario. The controls command exits 0 when the failing steps, diagnostics, and child exit codes match. Each run writes its Cucumber HTML, JSON, and `checks.json` under `reports/business/local/`. [Control details and report directories](test_documents/checkout-review.md#local-assertion-controls)
 
 ### Reports
 

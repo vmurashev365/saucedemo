@@ -16,7 +16,7 @@
     "test:debug": "cross-env DEBUG=true HEADED=true cucumber-js",
     "test:visible": "cross-env HEADED=true cucumber-js",
     "test:smoke": "cucumber-js --tags @smoke",
-    "test:smoke:headless": "cross-env BROWSER=chromium HEADED=false REPORT_DIR=reports/smoke cucumber-js --tags @smoke",
+    "test:smoke:headless": "cross-env BROWSER=chromium HEADED=false REPORT_DIR=reports/smoke node tests/run-smoke.js",
     "test:full:headless": "cross-env BROWSER=chromium HEADED=false REPORT_DIR=reports/full cucumber-js",
     "test:smoke:visible": "cross-env HEADED=true cucumber-js --tags @smoke",
     "test:positive": "cucumber-js --tags @positive",

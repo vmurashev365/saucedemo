@@ -13,7 +13,10 @@ Feature: Shopping Cart Management
     When I navigate to the cart page
     Then I should see an empty cart
     And I should see "Continue Shopping" button
+    And Continue Shopping should be enabled in the cart
     And the empty cart badge should show no count or zero
+    When I click "Continue Shopping" button on cart page
+    Then I should be taken back to the inventory page
 
   @positive @TC-027
   Scenario: View cart with single item

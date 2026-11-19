@@ -41,12 +41,36 @@ export abstract class BasePage {
     return await locator.count();
   }
 
-  protected async readItemRows(rows: Locator): Promise<CartItem[]> {
-    return rows.evaluateAll(elements => elements.map(row => ({
-      name: row.querySelector('.inventory_item_name')?.textContent?.trim() ?? '',
-      price: row.querySelector('.inventory_item_price')?.textContent ?? '',
-      quantityText: row.querySelector('.cart_quantity')?.textContent ?? null
-    })));
+  protected async readItemRows(surface: string, rows: Locator): Promise<CartItem[]> {
+    const items: CartItem[] = [];
+    for (const [index, row] of (await rows.all()).entries()) {
+      const rowLabel = `${surface} row ${index + 1}`;
+      const name = await this.readVisibleItemField(row.locator('.inventory_item_name'), `${rowLabel} name`);
+      const itemLabel = `${rowLabel} (${name})`;
+      const price = await this.readVisibleItemField(row.locator('.inventory_item_price'), `${itemLabel} price`);
+      const quantityText = await this.readVisibleItemField(row.locator('.cart_quantity'), `${itemLabel} quantity`);
+      items.push({ name, price, quantityText });
+    }
+    return items;
+  }
+
+  private async readVisibleItemField(field: Locator, label: string): Promise<string> {
+    // Playwright's visibility filter includes zero-opacity elements.
+    const values = await field.filter({ visible: true }).evaluateAll(elements => elements
+      .filter(element => element.checkVisibility({ opacityProperty: true }))
+      .map(element => (element as HTMLElement).innerText.trim()));
+
+    if (values.length === 0) {
+      const actual = await field.count() ? 'only hidden fields' : 'no matching field';
+      throw new Error(`${label}: expected one visible field, actual ${actual}.`);
+    }
+    if (values.length > 1) {
+      throw new Error(`${label}: expected one visible field, actual ${values.length} visible fields.`);
+    }
+    if (!values[0]) {
+      throw new Error(`${label}: expected nonblank text, actual blank.`);
+    }
+    return values[0];
   }
 
   async isElementVisible(locator: Locator): Promise<boolean> {

@@ -63,7 +63,7 @@ export class CartPage extends BasePage {
   }
 
   async expectSelectedItems(selection: readonly SelectedItem[]): Promise<void> {
-    assertSelectedItems('Cart', selection, await this.readItemRows(this.cartItems));
+    assertSelectedItems('Cart', selection, await this.readItemRows('Cart', this.cartItems));
   }
 
   async getCartItemNames(): Promise<string[]> {
@@ -134,6 +134,10 @@ export class CartPage extends BasePage {
   // Validation methods
   async expectContinueShoppingButtonToBeVisible(): Promise<void> {
     await this.expectElementToBeVisible(this.continueShoppingButton);
+  }
+
+  async expectContinueShoppingButtonToBeEnabled(): Promise<void> {
+    await this.uiExpect(this.continueShoppingButton).toBeEnabled();
   }
 
   async expectCheckoutButtonToBeVisible(): Promise<void> {
