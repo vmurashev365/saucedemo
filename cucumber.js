@@ -1,8 +1,11 @@
+const { styleText } = require('node:util');
+
 const reportDir = process.env.REPORT_DIR || 'reports';
 
 const common = {
   requireModule: ['tsx/cjs'],
   require: ['tests/step-definitions/**/*.ts', 'tests/hooks/**/*.ts'],
+  plugin: ['./tests/reporting/failed-scenario-steps.mts'],
   format: [
     'summary',
     `html:${reportDir}/cucumber-report.html`,
@@ -15,6 +18,8 @@ const common = {
   retry: 0,
   tags: process.env.TAGS || 'not @skip',
   worldParameters: {
+    // Cucumber's worker threads do not inherit the terminal's TTY stream.
+    colorStepStatuses: styleText('green', 'PASS') !== 'PASS',
     browser: process.env.BROWSER || 'chromium',
     headed: process.env.HEADED !== 'false',
     debug: process.env.DEBUG === 'true',

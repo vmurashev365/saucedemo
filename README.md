@@ -106,6 +106,7 @@ HEADED=false npm test
 | `TIMEOUT` | `30000` | Sets the Playwright action, navigation, and Page Object assertion timeout in milliseconds. Cucumber gives each step and hook one additional second to surface Playwright errors |
 | `TAGS` | `not @skip` | Sets the base Cucumber tag expression |
 | `REPORT_DIR` | `reports` | Selects the output directory for the HTML and JSON reports |
+| `SHOW_GHERKIN_PROGRESS` | `true` | Set to `false` to hide live progress and keep the standard Cucumber summary |
 
 ### Checkout verification
 
@@ -122,6 +123,6 @@ The first command runs seven scenarios with correct fixture behavior, including 
 
 ### Reports
 
-Each Cucumber invocation prints a console summary and writes HTML and JSON reports. The headless commands use `reports/smoke/` and `reports/full/`. On failure, a single screenshot is saved under the run's `screenshots/` and its exact bytes are embedded in the report. Playwright traces group actions by Gherkin step and are saved under the run's `traces/`. Open a ZIP with `npx playwright show-trace <path-to-trace.zip>`. Debug runs also write videos under `videos/` and the latest HAR at `har/trace.har`.
+Browser runs print the scenario name at the start and show the Gherkin keyword, text, status, and duration as each step finishes. Terminals with color support show `PASS` in green, `FAILED` in red, and `SKIPPED` in yellow. Set `NO_COLOR=1` for plain text. The end of a failing run lists every step of each failed scenario in order, including skipped steps. Each failed step includes its definition location and the full diagnostic reported by Cucumber. Each invocation writes HTML and JSON reports. The headless commands use `reports/smoke/` and `reports/full/`. On failure, a single screenshot is saved under the run's `screenshots/` and its exact bytes are embedded in the report. Playwright traces group actions by Gherkin step and are saved under the run's `traces/`. Open a ZIP with `npx playwright show-trace <path-to-trace.zip>`. Debug runs also write videos under `videos/` and the latest HAR at `har/trace.har`.
 
 The former `npm run report` command is replaced by automatic HTML generation. Run `npm test` for browser results or `npm run bdd:dry` for a step-discovery report. Each run overwrites the preceding reports. `npm run clean` removes the generated `reports/`, `screenshots/`, and `videos/` directories.
