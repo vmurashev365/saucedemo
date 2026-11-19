@@ -4,14 +4,6 @@ export interface TestUser {
   type: 'standard' | 'locked_out' | 'problem' | 'performance_glitch' | 'error' | 'visual';
 }
 
-export interface Product {
-  name: string;
-  description: string;
-  price: string;
-  imageSrc: string;
-  id: string;
-}
-
 export interface CheckoutInfo {
   firstName: string;
   lastName: string;
@@ -21,6 +13,7 @@ export interface CheckoutInfo {
 export interface TestConfig {
   browser: 'chromium' | 'firefox' | 'webkit';
   headed: boolean;
+  slowMo: number;
   debug: boolean;
   baseUrl: string;
   viewport: string;
@@ -39,9 +32,11 @@ export interface SelectedItem {
   expectedQuantity: number;
 }
 
-export type SortOption = 'az' | 'za' | 'lohi' | 'hilo';
+export const sortOptions = ['az', 'za', 'lohi', 'hilo'] as const;
+export type SortOption = typeof sortOptions[number];
 
-export interface ExpectedError {
-  message: string;
-  field?: string;
+export function toSortOption(value: string): SortOption {
+  const option = sortOptions.find(item => item === value);
+  if (!option) throw new Error(`Sort option: expected one of ${sortOptions.join(', ')}, actual ${JSON.stringify(value)}.`);
+  return option;
 }

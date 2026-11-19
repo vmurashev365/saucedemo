@@ -70,7 +70,7 @@ Feature: Shopping Cart Management
     And the cart should contain exactly the selected items, prices, and quantities
     When I click "Checkout" button on cart page
     Then I should be taken to the checkout information page
-    And I should see "Checkout: Your Information" page title
+    And I should see the "Checkout: Your Information" page title
 
   @negative @TC-031 @known-spec-discrepancy
   Scenario: Attempt checkout with empty cart

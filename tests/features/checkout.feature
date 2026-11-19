@@ -21,7 +21,7 @@ Feature: Checkout Process
         | John      | Doe      | 12345      |
       And I click "Continue" on checkout page
       Then I should be taken to the checkout overview page
-      And I should see "Checkout: Overview" as page title
+      And I should see the "Checkout: Overview" page title
       And the overview should contain exactly the selected items, prices, and quantities
       And the subtotal should equal the sum of all item prices
       And the tax should equal 8% of the subtotal
@@ -34,7 +34,7 @@ Feature: Checkout Process
     @positive
     Scenario: Return to products after successful checkout
       Given I have completed a successful checkout
-      When I click "Back Home"
+      When I click "Back Home" on checkout page
       Then I should be taken back to the inventory page
       And the shopping cart should be empty
 
@@ -43,7 +43,7 @@ Feature: Checkout Process
       When I fill in the checkout information:
         | firstName | lastName | postalCode |
         |           | Doe      | 12345      |
-      And I click "Continue"
+      And I click "Continue" on checkout page
       Then I should see the error message "Error: First Name is required"
       And I should remain on the checkout step one page
 
@@ -52,7 +52,7 @@ Feature: Checkout Process
       When I fill in the checkout information:
         | firstName | lastName | postalCode |
         | John      |          | 12345      |
-      And I click "Continue"
+      And I click "Continue" on checkout page
       Then I should see the error message "Error: Last Name is required"
       And I should remain on the checkout step one page
 
@@ -61,7 +61,7 @@ Feature: Checkout Process
       When I fill in the checkout information:
         | firstName | lastName | postalCode |
         | John      | Doe      |            |
-      And I click "Continue"
+      And I click "Continue" on checkout page
       Then I should see the error message "Error: Postal Code is required"
       And I should remain on the checkout step one page
 
@@ -70,7 +70,7 @@ Feature: Checkout Process
       When I fill in the checkout information:
         | firstName | lastName | postalCode |
         |           |          |            |
-      And I click "Continue"
+      And I click "Continue" on checkout page
       Then I should see the error message "Error: First Name is required"
       And I should remain on the checkout step one page
 

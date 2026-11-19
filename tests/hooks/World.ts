@@ -1,4 +1,4 @@
-import { Page, Browser, BrowserContext } from '@playwright/test';
+import { Page, Browser, BrowserContext, expect } from '@playwright/test';
 import { World, IWorldOptions, setWorldConstructor } from '@cucumber/cucumber';
 import { BrowserManager } from '../../src/utils/BrowserManager';
 import { SelectedItem, TestConfig } from '../../src/types';
@@ -17,8 +17,8 @@ export class CustomWorld extends World {
   public browser!: Browser;
   public context!: BrowserContext;
   public page!: Page;
-  public config!: TestConfig;
-  public browserManager!: BrowserManager;
+  public config: TestConfig;
+  public browserManager = new BrowserManager();
   public tracing = false;
   public traceGroupOpen = false;
 
@@ -34,18 +34,14 @@ export class CustomWorld extends World {
 
   constructor(options: IWorldOptions) {
     super(options);
-    this.browserManager = new BrowserManager();
-    this.initializeConfig();
-  }
-
-  private initializeConfig(): void {
     this.config = {
-      browser: (this.parameters?.browser as 'chromium' | 'firefox' | 'webkit') || 'chromium',
-      headed: this.parameters?.headed !== false,
-      debug: this.parameters?.debug || false,
+      browser: this.parameters?.browser || 'chromium',
+      headed: this.parameters?.headed === true,
+      slowMo: this.parameters?.slowMo || 0,
+      debug: this.parameters?.debug === true,
       baseUrl: this.parameters?.baseUrl || 'https://www.saucedemo.com',
       viewport: this.parameters?.viewport || '1920x1080',
-      timeout: this.parameters?.timeout || 30000
+      timeout: this.parameters?.timeout || 30_000
     };
   }
 
@@ -59,12 +55,7 @@ export class CustomWorld extends World {
       this.log(`Could not start Playwright tracing: ${error}`);
     }
     this.page = await this.browserManager.createPage(this.context, this.config);
-    
-    // Initialize page objects
-    this.initializePageObjects();
-  }
 
-  private initializePageObjects(): void {
     const { baseUrl, timeout } = this.config;
     this.loginPage = new LoginPage(this.page, baseUrl, timeout);
     this.inventoryPage = new InventoryPage(this.page, baseUrl, timeout);
@@ -90,21 +81,13 @@ export class CustomWorld extends World {
     this.selectedItems.delete(name);
   }
 
+  async expectPageTitle(title: string): Promise<void> {
+    // Every SauceDemo page after login renders its title in the shared header.
+    await expect(this.page.locator('.title')).toHaveText(title, { timeout: this.config.timeout });
+  }
+
   async cleanup(): Promise<void> {
     await this.browserManager.closeBrowser();
-  }
-
-  // Navigation helpers
-  async navigateToHomePage(): Promise<void> {
-    await this.loginPage.navigateTo();
-  }
-
-  async navigateToInventoryPage(): Promise<void> {
-    await this.inventoryPage.navigateTo('/inventory.html');
-  }
-
-  async navigateToCartPage(): Promise<void> {
-    await this.cartPage.navigateTo('/cart.html');
   }
 }
 

@@ -125,7 +125,7 @@ const controls: BrowserCase[] = [
   },
   {
     id: 'order-retains-backpack', options: { retainCartAfterOrder: true }, scenarios: [afterOrder],
-    checks: [cartStep, 'I have completed a successful checkout', 'I click "Back Home"', inventoryDestination]
+    checks: [cartStep, 'I have completed a successful checkout', 'I click "Back Home" on checkout page', inventoryDestination]
       .map(step => ({ scenario: afterOrder, step })),
     failures: [{ scenario: afterOrder, step: emptyAfterOrder,
       message: 'Error: expect(locator).toHaveCount(expected) failed', landingPath: '/cart.html',

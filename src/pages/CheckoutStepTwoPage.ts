@@ -4,7 +4,6 @@ import { SelectedItem } from '../types';
 import { assertPrice, assertSelectedItems } from '../utils/CheckoutAssertions';
 
 export class CheckoutStepTwoPage extends BasePage {
-  private readonly pageTitle: Locator;
   private readonly finishButton: Locator;
   private readonly cancelButton: Locator;
   private readonly cartItems: Locator;
@@ -14,7 +13,6 @@ export class CheckoutStepTwoPage extends BasePage {
 
   constructor(page: Page, baseUrl?: string, timeout?: number) {
     super(page, baseUrl, timeout);
-    this.pageTitle = this.page.locator('.title');
     this.finishButton = this.getElementByTestId('finish');
     this.cancelButton = this.getElementByTestId('cancel');
     this.cartItems = this.page.locator('.cart_item');
@@ -23,22 +21,17 @@ export class CheckoutStepTwoPage extends BasePage {
     this.summaryTotal = this.getElementByTestId('total-label');
   }
 
-  async isPageLoaded(): Promise<boolean> {
-    return await this.isElementVisible(this.pageTitle) &&
-      await this.isElementVisible(this.finishButton);
-  }
-
   async expectToBeOnCheckoutStepTwoPage(): Promise<void> {
-    await this.expectPageToHaveURL(`${this.baseUrl}/checkout-step-two.html`);
-    await this.expectElementToHaveText(this.pageTitle, 'Checkout: Overview');
+    await this.expectToBeAt('/checkout-step-two.html');
+    await this.expectTitle('Checkout: Overview');
   }
 
   async clickFinish(): Promise<void> {
-    await this.clickElement(this.finishButton);
+    await this.finishButton.click();
   }
 
   async clickCancel(): Promise<void> {
-    await this.clickElement(this.cancelButton);
+    await this.cancelButton.click();
   }
 
   async expectSelectedItems(selection: readonly SelectedItem[]): Promise<void> {
@@ -48,7 +41,7 @@ export class CheckoutStepTwoPage extends BasePage {
 
   async expectActionsAvailable(): Promise<void> {
     await Promise.all([this.finishButton, this.cancelButton].map(async button => {
-      await this.expectElementToBeVisible(button);
+      await this.uiExpect(button).toBeVisible();
       await this.uiExpect(button).toBeEnabled();
     }));
   }

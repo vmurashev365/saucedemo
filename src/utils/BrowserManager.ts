@@ -1,57 +1,33 @@
 ﻿import { Browser, Page, BrowserContext, chromium, firefox, webkit } from '@playwright/test';
 import { TestConfig } from '../types';
 
+const browserTypes = { chromium, firefox, webkit };
+
 export class BrowserManager {
   private browser: Browser | null = null;
   private context: BrowserContext | null = null;
   private page: Page | null = null;
 
   async launchBrowser(config: TestConfig): Promise<Browser> {
-    const browserOptions = {
+    this.browser = await browserTypes[config.browser].launch({
       headless: !config.headed,
-      slowMo: config.headed ? 300 : 0,
+      slowMo: config.slowMo,
       timeout: config.timeout,
-      args: config.headed ? [
-        '--no-sandbox',
-        '--disable-dev-shm-usage', 
-        '--disable-web-security',
-        '--start-maximized',
-        '--window-size=1920,1080'
-      ] : [
-        '--no-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-web-security'
-      ]
-    };
-
-    switch (config.browser) {
-      case 'firefox':
-        this.browser = await firefox.launch(browserOptions);
-        break;
-      case 'webkit':
-        this.browser = await webkit.launch(browserOptions);
-        break;
-      default:
-        this.browser = await chromium.launch(browserOptions);
-    }
-
+      // A headed Chromium window opens maximized; other engines use their default window.
+      args: config.headed && config.browser === 'chromium' ? ['--start-maximized'] : []
+    });
     return this.browser;
   }
 
   async createContext(browser: Browser, config: TestConfig): Promise<BrowserContext> {
     const [width, height] = config.viewport.split('x').map(Number);
-    
-    // Let headed browsers use the native window size.
-    const viewportSettings = config.headed ? null : { width, height };
-    
+
     this.context = await browser.newContext({
-      viewport: viewportSettings,
-      ignoreHTTPSErrors: true,
-      acceptDownloads: true,
+      // Let a headed Chromium window use its native size.
+      viewport: config.headed && config.browser === 'chromium' ? null : { width, height },
       recordVideo: config.debug ? { dir: 'videos/' } : undefined,
       recordHar: config.debug ? { path: 'har/trace.har' } : undefined
     });
-
     return this.context;
   }
 
@@ -60,17 +36,10 @@ export class BrowserManager {
     this.page.setDefaultTimeout(config.timeout);
     this.page.setDefaultNavigationTimeout(config.timeout);
 
-    // Add console logging in debug mode
     if (config.debug) {
-      this.page.on('console', msg => {
-        console.log(`  Console ${msg.type()}: ${msg.text()}`);
-      });
-
-      this.page.on('pageerror', error => {
-        console.error(` Page Error: ${error.message}`);
-      });
+      this.page.on('console', msg => console.log(`  Console ${msg.type()}: ${msg.text()}`));
+      this.page.on('pageerror', error => console.error(`  Page error: ${error.message}`));
     }
-
     return this.page;
   }
 
@@ -90,14 +59,6 @@ export class BrowserManager {
       }
     }
     if (errors.length) throw new AggregateError(errors, 'Browser cleanup failed');
-  }
-
-  getBrowser(): Browser | null {
-    return this.browser;
-  }
-
-  getContext(): BrowserContext | null {
-    return this.context;
   }
 
   getPage(): Page | null {
