@@ -1,11 +1,11 @@
-import { Given, When, Then } from '@cucumber/cucumber';
+import { DataTable, Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 import { CustomWorld } from '../hooks/World';
 import { DataHelper } from '../../src/utils/DataHelper';
+import { expectedAmounts } from '../../src/utils/CheckoutAssertions';
 
 // Checkout setup steps
-Given('I am on the checkout step one page', async function (this: CustomWorld) {
-  await this.inventoryPage.clickShoppingCart();
+When('I proceed from the cart to checkout', async function (this: CustomWorld) {
   await this.cartPage.clickCheckout();
   await this.checkoutStepOnePage.expectToBeOnCheckoutStepOnePage();
 });
@@ -27,7 +27,7 @@ Given('I have completed a successful checkout', async function (this: CustomWorl
 });
 
 // Checkout form filling steps
-When('I fill in the checkout information with valid details:', async function (this: CustomWorld, dataTable) {
+When('I fill in the checkout information with valid details:', async function (this: CustomWorld, dataTable: DataTable) {
   const data = dataTable.hashes()[0];
   const checkoutInfo = {
     firstName: data.firstName,
@@ -36,10 +36,9 @@ When('I fill in the checkout information with valid details:', async function (t
   };
   
   await this.checkoutStepOnePage.fillCheckoutInformation(checkoutInfo);
-  this.setTestData('checkoutInfo', checkoutInfo);
 });
 
-When('I fill in the checkout information:', async function (this: CustomWorld, dataTable) {
+When('I fill in the checkout information:', async function (this: CustomWorld, dataTable: DataTable) {
   const data = dataTable.hashes()[0];
   const checkoutInfo = {
     firstName: data.firstName || '',
@@ -48,7 +47,6 @@ When('I fill in the checkout information:', async function (this: CustomWorld, d
   };
   
   await this.checkoutStepOnePage.fillCheckoutInformation(checkoutInfo);
-  this.setTestData('checkoutInfo', checkoutInfo);
 });
 
 // Checkout step one validation
@@ -57,22 +55,12 @@ Then('I should remain on the checkout step one page', async function (this: Cust
 });
 
 // Checkout overview validation
-Then('I should see {string} in the order summary', async function (this: CustomWorld, productName: string) {
-  await this.checkoutStepTwoPage.expectOrderToContainItem(productName);
+Then('the overview should contain exactly the selected items, prices, and quantities', async function (this: CustomWorld) {
+  await this.checkoutStepTwoPage.expectSelectedItems(this.selection);
 });
 
-Then('I should see the correct subtotal and total amounts', async function (this: CustomWorld) {
-  await this.checkoutStepTwoPage.expectSubtotalToBeCorrect();
-  await this.checkoutStepTwoPage.expectTotalToBeCorrect();
-});
-
-Then('I should see {int} items in the order summary', async function (this: CustomWorld, expectedCount: number) {
-  await this.checkoutStepTwoPage.expectOrderToHaveItems(expectedCount);
-});
-
-Then('I should see the correct total for multiple items', async function (this: CustomWorld) {
-  await this.checkoutStepTwoPage.expectSubtotalToBeCorrect();
-  await this.checkoutStepTwoPage.expectTotalToBeCorrect();
+Then('Finish and Cancel should be available on the checkout overview', async function (this: CustomWorld) {
+  await this.checkoutStepTwoPage.expectActionsAvailable();
 });
 
 // Order completion validation
@@ -148,24 +136,13 @@ When('I click {string} on checkout page', async function (this: CustomWorld, but
 
 // Price calculation validation
 Then('the subtotal should equal the sum of all item prices', async function (this: CustomWorld) {
-  await this.checkoutStepTwoPage.expectSubtotalToBeCorrect();
+  await this.checkoutStepTwoPage.expectSubtotal(expectedAmounts(this.selection).subtotal);
 });
 
-Then('the tax should be calculated correctly \\({int}% of subtotal)', async function (this: CustomWorld, taxPercentage: number) {
-  const taxRate = taxPercentage / 100;
-  await this.checkoutStepTwoPage.expectTaxToBeCorrect(taxRate);
+Then('the tax should equal 8% of the subtotal', async function (this: CustomWorld) {
+  await this.checkoutStepTwoPage.expectTax(expectedAmounts(this.selection).tax);
 });
 
 Then('the total should equal subtotal plus tax', async function (this: CustomWorld) {
-  await this.checkoutStepTwoPage.expectTotalToBeCorrect();
-});
-
-// Additional checkout validations
-Then('I should see payment and shipping information', async function (this: CustomWorld) {
-  await this.checkoutStepTwoPage.expectPaymentInformationToBeVisible();
-  await this.checkoutStepTwoPage.expectShippingInformationToBeVisible();
-});
-
-Then('the order summary should be correct with {int} items', async function (this: CustomWorld, expectedItemCount: number) {
-  await this.checkoutStepTwoPage.expectOrderSummaryToBeCorrect(expectedItemCount);
+  await this.checkoutStepTwoPage.expectTotal(expectedAmounts(this.selection).total);
 });

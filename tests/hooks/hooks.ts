@@ -2,7 +2,9 @@ import { After, Before, BeforeAll, Status, setDefaultTimeout } from '@cucumber/c
 import { mkdirSync } from 'node:fs';
 import { CustomWorld } from './World';
 
-setDefaultTimeout(Number(process.env.TIMEOUT) || 30_000);
+const actionTimeout = Number(process.env.TIMEOUT) || 30_000;
+// Let a timed-out Playwright action report its own error before Cucumber stops the step.
+setDefaultTimeout(actionTimeout + 1_000);
 
 BeforeAll(function () {
   for (const directory of ['screenshots', 'videos', 'har']) {

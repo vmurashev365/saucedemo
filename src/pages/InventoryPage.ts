@@ -24,8 +24,8 @@ export class InventoryPage extends BasePage {
   private readonly addToCartButtons: Locator;
   private readonly removeFromCartButtons: Locator;
 
-  constructor(page: Page, baseUrl?: string) {
-    super(page, baseUrl);
+  constructor(page: Page, baseUrl?: string, timeout?: number) {
+    super(page, baseUrl, timeout);
 
     // Header elements
     this.appLogo = this.page.locator('.app_logo');
@@ -58,11 +58,11 @@ export class InventoryPage extends BasePage {
     return await this.getText(this.pageTitle);
   }
 
-  async expectToBeOnInventoryPage(timeout?: number): Promise<void> {
+  async expectToBeOnInventoryPage(): Promise<void> {
     await Promise.all([
-      this.expectPageToHaveURL(`${this.baseUrl}/inventory.html`, timeout),
-      expect(this.inventoryContainer).toBeVisible({ timeout }),
-      expect(this.pageTitle).toHaveText('Products', { timeout })
+      this.expectPageToHaveURL(`${this.baseUrl}/inventory.html`),
+      this.expectElementToBeVisible(this.inventoryContainer),
+      this.expectElementToHaveText(this.pageTitle, 'Products')
     ]);
   }
 
@@ -102,10 +102,19 @@ export class InventoryPage extends BasePage {
     return prices;
   }
 
+  async getProductPrice(productName: string): Promise<string> {
+    return this.getText(this.productCard(productName).locator('.inventory_item_price'));
+  }
+
   async addProductToCart(productName: string): Promise<void> {
-    const productItem = this.page.locator('.inventory_item').filter({ hasText: productName });
-    const addButton = productItem.locator('button[id^="add-to-cart"]');
+    const addButton = this.productCard(productName).locator('button[id^="add-to-cart"]');
     await this.clickElement(addButton);
+  }
+
+  private productCard(name: string): Locator {
+    return this.inventoryItems.filter({
+      has: this.page.locator('.inventory_item_name').and(this.page.getByText(name, { exact: true }))
+    });
   }
 
   async removeProductFromCart(productName: string): Promise<void> {

@@ -1,6 +1,7 @@
-import { Page, Locator, expect } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
 import { BasePage } from './base/BasePage';
-import { CartItem } from '../types';
+import { SelectedItem } from '../types';
+import { assertSelectedItems } from '../utils/CheckoutAssertions';
 
 export class CartPage extends BasePage {
   // Header elements
@@ -11,7 +12,7 @@ export class CartPage extends BasePage {
   // Cart content elements
   private readonly cartContents: Locator;
   private readonly cartItems: Locator;
-  private readonly emptyCartMessage: Locator;
+  private readonly cartBadge: Locator;
 
   // Item elements
   private readonly itemNames: Locator;
@@ -20,8 +21,8 @@ export class CartPage extends BasePage {
   private readonly itemQuantities: Locator;
   private readonly removeButtons: Locator;
 
-  constructor(page: Page, baseUrl?: string) {
-    super(page, baseUrl);
+  constructor(page: Page, baseUrl?: string, timeout?: number) {
+    super(page, baseUrl, timeout);
 
     // Header elements
     this.pageTitle = this.page.locator('.title');
@@ -31,7 +32,7 @@ export class CartPage extends BasePage {
     // Cart content
     this.cartContents = this.getElementByTestId('cart-contents-container');
     this.cartItems = this.page.locator('.cart_item');
-    this.emptyCartMessage = this.page.locator('.cart_item:has-text("Your cart is empty")');
+    this.cartBadge = this.getElementByTestId('shopping-cart-badge');
 
     // Item elements
     this.itemNames = this.page.locator('.inventory_item_name');
@@ -61,21 +62,8 @@ export class CartPage extends BasePage {
     return await this.getElementCount(this.cartItems);
   }
 
-  async getCartItems(): Promise<CartItem[]> {
-    const items: CartItem[] = [];
-    const count = await this.cartItems.count();
-
-    for (let i = 0; i < count; i++) {
-      const item = this.cartItems.nth(i);
-      const name = await item.locator('.inventory_item_name').textContent() ?? '';
-      const price = await item.locator('.inventory_item_price').textContent() ?? '';
-      const quantityText = await item.locator('.cart_quantity').textContent() ?? '1';
-      const quantity = parseInt(quantityText) || 1;
-
-      items.push({ name, price, quantity });
-    }
-
-    return items;
+  async expectSelectedItems(selection: readonly SelectedItem[]): Promise<void> {
+    assertSelectedItems('Cart', selection, await this.readItemRows(this.cartItems));
   }
 
   async getCartItemNames(): Promise<string[]> {
@@ -99,7 +87,7 @@ export class CartPage extends BasePage {
   }
 
   async expectCartToHaveItems(expectedCount: number): Promise<void> {
-    await expect(this.cartItems).toHaveCount(expectedCount);
+    await this.uiExpect(this.cartItems).toHaveCount(expectedCount);
   }
 
   async expectCartToContainItem(itemName: string): Promise<void> {
@@ -109,7 +97,7 @@ export class CartPage extends BasePage {
 
   async expectCartToNotContainItem(itemName: string): Promise<void> {
     const cartItem = this.page.locator('.cart_item').filter({ hasText: itemName });
-    await expect(cartItem).toBeHidden();
+    await this.uiExpect(cartItem).toBeHidden();
   }
 
   // Remove items methods
@@ -153,43 +141,24 @@ export class CartPage extends BasePage {
   }
 
   async expectCheckoutButtonToBeEnabled(): Promise<void> {
-    expect(await this.checkoutButton.isEnabled()).toBe(true);
+    await this.uiExpect(this.checkoutButton).toBeEnabled();
   }
 
-  async expectCheckoutButtonToBeDisabled(): Promise<void> {
-    expect(await this.checkoutButton.isEnabled()).toBe(false);
+  async expectCheckoutUnavailable(): Promise<void> {
+    if (await this.checkoutButton.isVisible() && await this.checkoutButton.isEnabled()) {
+      throw new Error('Empty cart checkout: expected unavailable or disabled, actual enabled.');
+    }
   }
 
-  // Get item details
-  async getItemPrice(itemName: string): Promise<string> {
-    const cartItem = this.page.locator('.cart_item').filter({ hasText: itemName });
-    const priceElement = cartItem.locator('.inventory_item_price');
-    return await this.getText(priceElement);
+  async expectEmptyCartBadge(): Promise<void> {
+    if (await this.cartBadge.isVisible()) {
+      await this.expectElementToHaveText(this.cartBadge, '0');
+    }
   }
 
   async getItemDescription(itemName: string): Promise<string> {
     const cartItem = this.page.locator('.cart_item').filter({ hasText: itemName });
     const descElement = cartItem.locator('.inventory_item_desc');
     return await this.getText(descElement);
-  }
-
-  async getItemQuantity(itemName: string): Promise<number> {
-    const cartItem = this.page.locator('.cart_item').filter({ hasText: itemName });
-    const quantityElement = cartItem.locator('.cart_quantity');
-    const quantityText = await this.getText(quantityElement);
-    return parseInt(quantityText) || 1;
-  }
-
-  // Calculate total (if needed for validation)
-  async calculateTotalPrice(): Promise<number> {
-    const items = await this.getCartItems();
-    let total = 0;
-    
-    for (const item of items) {
-      const price = parseFloat(item.price.replace('$', ''));
-      total += price * item.quantity;
-    }
-    
-    return Math.round(total * 100) / 100; // Round to 2 decimal places
   }
 }

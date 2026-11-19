@@ -10,6 +10,7 @@ Manual QA documentation and browser automation for the [SauceDemo storefront](ht
 | [Test strategy](test_documents/Test%20Strategy%20Document%20-%20SauceDemo.pdf) | Test scope, approach, and priorities |
 | [Manual test cases](test_documents/Test%20Cases%20-%20SauceDemo%20E-commerce%20Platform.pdf) | Test steps and expected results |
 | [Original automation results](test_documents/baseline-2025-08/README.md) | August 2025 run results, failure details, and original evidence |
+| [Cart and checkout review](test_documents/checkout-review.md) | Manual rules, observed discrepancies, and local assertion controls |
 
 ## Automation
 
@@ -85,8 +86,22 @@ HEADED=false npm test
 | `DEBUG` | `false` | Set to `true` to record diagnostics |
 | `BASE_URL` | `https://www.saucedemo.com` | Selects the SauceDemo deployment |
 | `VIEWPORT` | `1920x1080` | Sets the headless viewport |
-| `TIMEOUT` | `30000` | Sets the default step, hook, and page timeout in milliseconds |
+| `TIMEOUT` | `30000` | Sets the Playwright action, navigation, and Page Object assertion timeout in milliseconds. Cucumber gives each step and hook one additional second to surface Playwright errors |
 | `TAGS` | `not @skip` | Sets the base Cucumber tag expression |
+| `REPORT_DIR` | `reports` | Selects the output directory for the HTML and JSON reports |
+
+### Checkout verification
+
+The live suite checks the documented behavior. Two scenarios currently tagged `@known-spec-discrepancy` fail against SauceDemo. Checkout is enabled with an empty cart, and Cancel on the overview returns to Products. To run the remaining live scenarios, use `npm test -- --tags "not @known-spec-discrepancy"`.
+
+Run the checkout controls against an isolated loopback fixture with Chromium installed.
+
+```sh
+npm run test:checkout:local
+npm run test:checkout:controls
+```
+
+The first command exercises the normal cart, overview, and completion steps. The second checks invalid input messages and runs two deliberately failing browser cases. It verifies the exact Cucumber step, error message, and child exit code for each. The wrapper exits successfully when both failures match. Reports are written under `reports/business/local/`.
 
 ### Reports
 

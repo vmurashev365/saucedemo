@@ -1,12 +1,15 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { CartItem } from '../../types';
 
 export abstract class BasePage {
   protected page: Page;
   protected baseUrl: string;
+  protected readonly uiExpect: typeof expect;
 
-  constructor(page: Page, baseUrl: string = 'https://www.saucedemo.com') {
+  constructor(page: Page, baseUrl: string = 'https://www.saucedemo.com', timeout = 30_000) {
     this.page = page;
     this.baseUrl = baseUrl.replace(/\/+$/, '');
+    this.uiExpect = expect.configure({ timeout });
   }
 
   // Common actions following DRY principles
@@ -36,6 +39,14 @@ export abstract class BasePage {
 
   async getElementCount(locator: Locator): Promise<number> {
     return await locator.count();
+  }
+
+  protected async readItemRows(rows: Locator): Promise<CartItem[]> {
+    return rows.evaluateAll(elements => elements.map(row => ({
+      name: row.querySelector('.inventory_item_name')?.textContent?.trim() ?? '',
+      price: row.querySelector('.inventory_item_price')?.textContent ?? '',
+      quantityText: row.querySelector('.cart_quantity')?.textContent ?? null
+    })));
   }
 
   async isElementVisible(locator: Locator): Promise<boolean> {
@@ -68,23 +79,23 @@ export abstract class BasePage {
   }
 
   async expectElementToBeVisible(locator: Locator): Promise<void> {
-    await expect(locator).toBeVisible();
+    await this.uiExpect(locator).toBeVisible();
   }
 
   async expectElementToHaveText(locator: Locator, expectedText: string): Promise<void> {
-    await expect(locator).toHaveText(expectedText);
+    await this.uiExpect(locator).toHaveText(expectedText);
   }
 
   async expectElementToContainText(locator: Locator, expectedText: string): Promise<void> {
-    await expect(locator).toContainText(expectedText);
+    await this.uiExpect(locator).toContainText(expectedText);
   }
 
-  async expectPageToHaveURL(expectedUrl: string, timeout?: number): Promise<void> {
-    await expect(this.page).toHaveURL(expectedUrl, { timeout });
+  async expectPageToHaveURL(expectedUrl: string): Promise<void> {
+    await this.uiExpect(this.page).toHaveURL(expectedUrl);
   }
 
   async expectPageToHaveTitle(expectedTitle: string): Promise<void> {
-    await expect(this.page).toHaveTitle(expectedTitle);
+    await this.uiExpect(this.page).toHaveTitle(expectedTitle);
   }
 
   // Common selectors that might be used across pages

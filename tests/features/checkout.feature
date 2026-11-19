@@ -10,7 +10,9 @@ Feature: Checkout Process
   Rule: Checkout with a single item
     Background:
       Given I have added "Sauce Labs Backpack" to the cart
-      And I am on the checkout step one page
+      And I am on the cart page
+      And the cart should contain exactly the selected items, prices, and quantities
+      And I proceed from the cart to checkout
 
     @positive @smoke @e2e
     Scenario: Complete successful checkout process
@@ -20,8 +22,10 @@ Feature: Checkout Process
       And I click "Continue" on checkout page
       Then I should be taken to the checkout overview page
       And I should see "Checkout: Overview" as page title
-      And I should see "Sauce Labs Backpack" in the order summary
-      And I should see the correct subtotal and total amounts
+      And the overview should contain exactly the selected items, prices, and quantities
+      And the subtotal should equal the sum of all item prices
+      And the tax should equal 8% of the subtotal
+      And the total should equal subtotal plus tax
       When I click "Finish" on checkout page
       Then I should be taken to the checkout complete page
       And I should see order completion confirmation message
@@ -70,46 +74,46 @@ Feature: Checkout Process
       Then I should see the error message "Error: First Name is required"
       And I should remain on the checkout step one page
 
-    @positive
+    @positive @TC-045
     Scenario: Cancel checkout from step one
       When I click "Cancel" on the checkout step one page
       Then I should be redirected to the cart page
       And my items should still be in the cart
 
-    @positive
+    @positive @TC-046 @known-spec-discrepancy
     Scenario: Cancel checkout from overview page
       Given I have filled in valid checkout information and proceeded to overview
       When I click "Cancel" on the checkout overview page
-      Then I should be taken back to the inventory page
+      Then I should be redirected to the cart page
       And my items should still be in the cart
 
   Rule: Checkout with multiple items
-
-    @positive
-    Scenario: Complete checkout with multiple items
+    Background:
       Given I have added the following items to the cart:
         | Sauce Labs Backpack  |
         | Sauce Labs Bike Light |
-      And I am on the checkout step one page
+      And I am on the cart page
+      And the cart should contain exactly the selected items, prices, and quantities
+      And I proceed from the cart to checkout
+
+    @positive @TC-043
+    Scenario: Complete checkout with multiple items
       When I fill in the checkout information with valid details:
         | firstName | lastName | postalCode |
         | Jane      | Smith    | 54321      |
-      And I click "Continue"
-      Then I should see 2 items in the order summary
-      And I should see "Sauce Labs Bike Light" in the order summary
-      And I should see the correct total for multiple items
-      When I click "Finish"
+      And I click "Continue" on checkout page
+      Then the overview should contain exactly the selected items, prices, and quantities
+      And Finish and Cancel should be available on the checkout overview
+      And the subtotal should equal the sum of all item prices
+      And the tax should equal 8% of the subtotal
+      And the total should equal subtotal plus tax
+      When I click "Finish" on checkout page
       Then I should see the order completion confirmation
 
-    @positive
+    @positive @TC-047
     Scenario: Verify order summary calculations
-      Given I have added the following items to the cart:
-        | Sauce Labs Backpack    |
-        | Sauce Labs Bike Light  |
-        | Sauce Labs Bolt T-Shirt |
-      And I am on the checkout step one page
-      And I have filled in valid checkout information and proceeded to overview
-      Then I should see 3 items in the order summary
+      Given I have filled in valid checkout information and proceeded to overview
+      Then the overview should contain exactly the selected items, prices, and quantities
       And the subtotal should equal the sum of all item prices
-      And the tax should be calculated correctly (8% of subtotal)
+      And the tax should equal 8% of the subtotal
       And the total should equal subtotal plus tax

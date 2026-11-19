@@ -42,6 +42,14 @@ export class DataHelper {
     return Object.values(testData.products) as Product[];
   }
 
+  static getReferencePrice(name: string): string {
+    const product = Object.values(testData.products).find(item => item.name === name);
+    if (!product || !('price' in product) || typeof product.price !== 'string' || !product.price.trim()) {
+      throw new Error(`Reference price for ${name}: expected a USD price in testData.json, actual missing.`);
+    }
+    return product.price;
+  }
+
   static getRandomProduct(): Product {
     const products = this.getAllProducts();
     const randomIndex = Math.floor(Math.random() * products.length);

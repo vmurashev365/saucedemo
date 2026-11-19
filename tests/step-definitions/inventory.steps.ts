@@ -1,4 +1,4 @@
-import { Given, When, Then } from '@cucumber/cucumber';
+import { DataTable, Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 import { CustomWorld } from '../hooks/World';
 import { DataHelper } from '../../src/utils/DataHelper';
@@ -52,38 +52,23 @@ Then('each product should have an {string} button', async function (this: Custom
 });
 
 // Cart management steps
-When('I add {string} to the cart', async function (this: CustomWorld, productName: string) {
-  await this.inventoryPage.addProductToCart(productName);
-  // Store added product for later use
-  const addedProducts = this.getTestData('addedProducts') || [];
-  addedProducts.push(productName);
-  this.setTestData('addedProducts', addedProducts);
-});
+async function selectProduct(this: CustomWorld, name: string): Promise<void> {
+  await this.selectProduct(name);
+}
 
-Given('I have added {string} to the cart', async function (this: CustomWorld, productName: string) {
-  await this.inventoryPage.addProductToCart(productName);
-  const addedProducts = this.getTestData('addedProducts') || [];
-  addedProducts.push(productName);
-  this.setTestData('addedProducts', addedProducts);
-});
+When('I add {string} to the cart', selectProduct);
+Given('I have added {string} to the cart', selectProduct);
 
-Given('I have added the following items to the cart:', async function (this: CustomWorld, dataTable) {
-  const products = dataTable.raw().flat();
-  for (const productName of products) {
-    await this.inventoryPage.addProductToCart(productName);
+Given('I have added the following items to the cart:', async function (this: CustomWorld, dataTable: DataTable) {
+  for (const name of dataTable.raw().flat()) {
+    await this.selectProduct(name);
   }
-  this.setTestData('addedProducts', products);
 });
 
 When('I add all products to the cart', async function (this: CustomWorld) {
-  const productNames = await this.inventoryPage.getProductNames();
-  
-  for (const productName of productNames) {
-    await this.inventoryPage.addProductToCart(productName);
-    await this.page.waitForTimeout(100);
+  for (const name of await this.inventoryPage.getProductNames()) {
+    await this.selectProduct(name);
   }
-  
-  this.setTestData('addedProducts', productNames);
 });
 
 Then('the shopping cart badge should show {string}', async function (this: CustomWorld, expectedCount: string) {
@@ -157,9 +142,8 @@ When('I click on the shopping cart icon', async function (this: CustomWorld) {
 });
 
 // Empty cart state
-Given('I have no items in my cart', async function (this: CustomWorld) {  
-  // Just set test data - assume cart is empty initially
-  this.setTestData('addedProducts', []);
+Given('I have no items in my cart', function (this: CustomWorld) {
+  expect(this.selection).toHaveLength(0);
 });
 
 When('I navigate to the cart page', async function (this: CustomWorld) {

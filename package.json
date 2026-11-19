@@ -24,6 +24,8 @@
     "test:inventory": "cucumber-js --tags @inventory",
     "test:cart": "cucumber-js --tags @cart",
     "test:checkout": "cucumber-js --tags @checkout",
+    "test:checkout:local": "tsx tests/local/run-checkout.ts correct",
+    "test:checkout:controls": "tsx tests/local/run-checkout.ts negative",
     "typecheck": "tsc --noEmit",
     "bdd:dry": "cucumber-js --dry-run",
     "clean": "node -e \"const { rmSync } = require('node:fs'); for (const directory of ['reports', 'screenshots', 'videos']) rmSync(directory, { recursive: true, force: true });\""

@@ -1,7 +1,9 @@
 import { Page, Browser, BrowserContext } from '@playwright/test';
 import { World, IWorldOptions, setWorldConstructor } from '@cucumber/cucumber';
 import { BrowserManager } from '../../src/utils/BrowserManager';
-import { TestConfig } from '../../src/types';
+import { SelectedItem, TestConfig } from '../../src/types';
+import { assertPrice, referencePriceCents } from '../../src/utils/CheckoutAssertions';
+import { DataHelper } from '../../src/utils/DataHelper';
 
 // Page Objects
 import { LoginPage } from '../../src/pages/LoginPage';
@@ -26,8 +28,7 @@ export class CustomWorld extends World {
   public checkoutStepTwoPage!: CheckoutStepTwoPage;
   public checkoutCompletePage!: CheckoutCompletePage;
 
-  // Test data storage
-  public testData: { [key: string]: any } = {};
+  private readonly selectedItems = new Map<string, SelectedItem>();
 
   constructor(options: IWorldOptions) {
     super(options);
@@ -56,30 +57,33 @@ export class CustomWorld extends World {
   }
 
   private initializePageObjects(): void {
-    const { baseUrl } = this.config;
-    this.loginPage = new LoginPage(this.page, baseUrl);
-    this.inventoryPage = new InventoryPage(this.page, baseUrl);
-    this.cartPage = new CartPage(this.page, baseUrl);
-    this.checkoutStepOnePage = new CheckoutStepOnePage(this.page, baseUrl);
-    this.checkoutStepTwoPage = new CheckoutStepTwoPage(this.page, baseUrl);
-    this.checkoutCompletePage = new CheckoutCompletePage(this.page, baseUrl);
+    const { baseUrl, timeout } = this.config;
+    this.loginPage = new LoginPage(this.page, baseUrl, timeout);
+    this.inventoryPage = new InventoryPage(this.page, baseUrl, timeout);
+    this.cartPage = new CartPage(this.page, baseUrl, timeout);
+    this.checkoutStepOnePage = new CheckoutStepOnePage(this.page, baseUrl, timeout);
+    this.checkoutStepTwoPage = new CheckoutStepTwoPage(this.page, baseUrl, timeout);
+    this.checkoutCompletePage = new CheckoutCompletePage(this.page, baseUrl, timeout);
+  }
+
+  get selection(): readonly SelectedItem[] {
+    return [...this.selectedItems.values()];
+  }
+
+  async selectProduct(name: string): Promise<void> {
+    const reference = referencePriceCents(name, DataHelper.getReferencePrice(name));
+    const displayedPrice = await this.inventoryPage.getProductPrice(name);
+    const catalogPriceCents = assertPrice(`Catalog price for ${name}`, reference, displayedPrice);
+    await this.inventoryPage.addProductToCart(name);
+    this.selectedItems.set(name, { name, catalogPriceCents, expectedQuantity: 1 });
+  }
+
+  forgetProduct(name: string): void {
+    this.selectedItems.delete(name);
   }
 
   async cleanup(): Promise<void> {
     await this.browserManager.closeBrowser();
-  }
-
-  // Helper methods for test data storage
-  setTestData(key: string, value: any): void {
-    this.testData[key] = value;
-  }
-
-  getTestData(key: string): any {
-    return this.testData[key];
-  }
-
-  hasTestData(key: string): boolean {
-    return key in this.testData;
   }
 
   async takeScreenshot(name: string): Promise<Buffer> {

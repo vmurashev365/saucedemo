@@ -10,7 +10,7 @@ export class BrowserManager {
     const browserOptions = {
       headless: !config.headed,
       slowMo: config.headed ? 300 : 0,
-      timeout: 60000,
+      timeout: config.timeout,
       args: config.headed ? [
         '--no-sandbox',
         '--disable-dev-shm-usage', 

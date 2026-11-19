@@ -29,8 +29,14 @@ export interface TestConfig {
 
 export interface CartItem {
   name: string;
-  quantity: number;
   price: string;
+  quantityText: string | null;
+}
+
+export interface SelectedItem {
+  name: string;
+  catalogPriceCents: number;
+  expectedQuantity: number;
 }
 
 export type SortOption = 'az' | 'za' | 'lohi' | 'hilo';

@@ -31,7 +31,7 @@ When('I login with username {string} and password {string}', async function (thi
 });
 
 Then('I should be redirected to the inventory page', async function (this: CustomWorld) {
-  await this.inventoryPage.expectToBeOnInventoryPage(this.config.timeout);
+  await this.inventoryPage.expectToBeOnInventoryPage();
 });
 
 Then('I should see the {string} page title', async function (this: CustomWorld, expectedTitle: string) {

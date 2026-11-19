@@ -1,0 +1,163 @@
+{
+  "origin": "https://www.saucedemo.com",
+  "observedAt": "2026-11-19T03:41:31.793Z",
+  "observations": [
+    {
+      "name": "empty-cart-before-checkout",
+      "url": "https://www.saucedemo.com/cart.html",
+      "title": "Your Cart",
+      "cartBadge": null,
+      "hasEmptyCartMessage": false,
+      "rows": [],
+      "buttons": [
+        {
+          "id": "continue-shopping",
+          "disabled": false
+        },
+        {
+          "id": "checkout",
+          "disabled": false
+        }
+      ],
+      "fields": {}
+    },
+    {
+      "name": "empty-cart-after-checkout",
+      "url": "https://www.saucedemo.com/checkout-step-one.html",
+      "title": "Checkout: Your Information",
+      "cartBadge": null,
+      "hasEmptyCartMessage": false,
+      "rows": [],
+      "buttons": [
+        {
+          "id": "cancel",
+          "disabled": false
+        },
+        {
+          "id": "continue",
+          "disabled": false
+        }
+      ],
+      "fields": {}
+    },
+    {
+      "name": "cancel-information-before",
+      "url": "https://www.saucedemo.com/checkout-step-one.html",
+      "title": "Checkout: Your Information",
+      "cartBadge": "2",
+      "hasEmptyCartMessage": false,
+      "rows": [],
+      "buttons": [
+        {
+          "id": "cancel",
+          "disabled": false
+        },
+        {
+          "id": "continue",
+          "disabled": false
+        }
+      ],
+      "fields": {}
+    },
+    {
+      "name": "cancel-information-after",
+      "url": "https://www.saucedemo.com/cart.html",
+      "title": "Your Cart",
+      "cartBadge": "2",
+      "hasEmptyCartMessage": false,
+      "rows": [
+        {
+          "name": "Sauce Labs Backpack",
+          "price": "$29.99",
+          "quantity": "1"
+        },
+        {
+          "name": "Sauce Labs Bike Light",
+          "price": "$9.99",
+          "quantity": "1"
+        }
+      ],
+      "buttons": [
+        {
+          "id": "continue-shopping",
+          "disabled": false
+        },
+        {
+          "id": "checkout",
+          "disabled": false
+        }
+      ],
+      "fields": {}
+    },
+    {
+      "name": "cancel-overview-before",
+      "url": "https://www.saucedemo.com/checkout-step-two.html",
+      "title": "Checkout: Overview",
+      "cartBadge": "2",
+      "hasEmptyCartMessage": false,
+      "rows": [
+        {
+          "name": "Sauce Labs Backpack",
+          "price": "$29.99",
+          "quantity": "1"
+        },
+        {
+          "name": "Sauce Labs Bike Light",
+          "price": "$9.99",
+          "quantity": "1"
+        }
+      ],
+      "buttons": [
+        {
+          "id": "cancel",
+          "disabled": false
+        }
+      ],
+      "fields": {
+        "subtotal-label": "Item total: $39.98",
+        "tax-label": "Tax: $3.20",
+        "total-label": "Total: $43.18"
+      }
+    },
+    {
+      "name": "cancel-overview-after",
+      "url": "https://www.saucedemo.com/inventory.html",
+      "title": "Products",
+      "cartBadge": "2",
+      "hasEmptyCartMessage": false,
+      "rows": [],
+      "buttons": [],
+      "fields": {}
+    },
+    {
+      "name": "cancel-overview-cart-after-reopen",
+      "url": "https://www.saucedemo.com/cart.html",
+      "title": "Your Cart",
+      "cartBadge": "2",
+      "hasEmptyCartMessage": false,
+      "rows": [
+        {
+          "name": "Sauce Labs Backpack",
+          "price": "$29.99",
+          "quantity": "1"
+        },
+        {
+          "name": "Sauce Labs Bike Light",
+          "price": "$9.99",
+          "quantity": "1"
+        }
+      ],
+      "buttons": [
+        {
+          "id": "continue-shopping",
+          "disabled": false
+        },
+        {
+          "id": "checkout",
+          "disabled": false
+        }
+      ],
+      "fields": {}
+    }
+  ]
+}

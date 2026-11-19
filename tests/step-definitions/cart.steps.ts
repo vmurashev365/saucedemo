@@ -1,4 +1,4 @@
-import { Given, When, Then } from '@cucumber/cucumber';
+import { When, Then } from '@cucumber/cucumber';
 import { expect } from '@playwright/test';
 import { CustomWorld } from '../hooks/World';
 
@@ -11,40 +11,20 @@ Then('I should see {string} in my cart', async function (this: CustomWorld, prod
   await this.cartPage.expectCartToContainItem(productName);
 });
 
-Then('I should see the correct price for {string}', async function (this: CustomWorld, productName: string) {
-  const price = await this.cartPage.getItemPrice(productName);
-  expect(price).toMatch(/^\$\d+\.\d{2}$/);
-  
-  // Optionally verify against expected price from test data
-  const expectedPrice = this.getTestData(`${productName}_price`);
-  if (expectedPrice) {
-    expect(price).toBe(expectedPrice);
-  }
+Then('the empty cart badge should show no count or zero', async function (this: CustomWorld) {
+  await this.cartPage.expectEmptyCartBadge();
 });
 
-Then('I should see quantity {string} for {string}', async function (this: CustomWorld, expectedQuantity: string, productName: string) {
-  const actualQuantity = await this.cartPage.getItemQuantity(productName);
-  expect(actualQuantity).toBe(parseInt(expectedQuantity));
+Then('checkout should be unavailable with an empty cart', async function (this: CustomWorld) {
+  await this.cartPage.expectCheckoutUnavailable();
 });
 
 Then('I should see {int} items in my cart', async function (this: CustomWorld, expectedCount: number) {
   await this.cartPage.expectCartToHaveItems(expectedCount);
 });
 
-Then('I should see all selected items with correct details', async function (this: CustomWorld) {
-  const addedProducts = this.getTestData('addedProducts') || [];
-  
-  for (const productName of addedProducts) {
-    await this.cartPage.expectCartToContainItem(productName);
-    
-    // Verify price format
-    const price = await this.cartPage.getItemPrice(productName);
-    expect(price).toMatch(/^\$\d+\.\d{2}$/);
-    
-    // Verify quantity (default is 1)
-    const quantity = await this.cartPage.getItemQuantity(productName);
-    expect(quantity).toBeGreaterThan(0);
-  }
+Then('the cart should contain exactly the selected items, prices, and quantities', async function (this: CustomWorld) {
+  await this.cartPage.expectSelectedItems(this.selection);
 });
 
 Then('I should see {int} item in my cart', async function (this: CustomWorld, expectedCount: number) {
@@ -68,13 +48,7 @@ When('I remove {string} from the cart', async function (this: CustomWorld, produ
     await this.inventoryPage.removeProductFromCart(productName);
   }
   
-  // Update test data
-  const addedProducts = this.getTestData('addedProducts') || [];
-  const index = addedProducts.indexOf(productName);
-  if (index > -1) {
-    addedProducts.splice(index, 1);
-    this.setTestData('addedProducts', addedProducts);
-  }
+  this.forgetProduct(productName);
 });
 
 // Navigation steps
@@ -122,38 +96,12 @@ Then('I should see {string} button', async function (this: CustomWorld, buttonTe
 
 // Cart state validation
 Then('my items should still be in the cart', async function (this: CustomWorld) {
-  const addedProducts = this.getTestData('addedProducts') || [];
-  expect(addedProducts.length).toBeGreaterThan(0);
-
-  if (!this.page.url().endsWith('/cart.html')) {
-    await this.inventoryPage.clickShoppingCart();
-  }
   await this.cartPage.expectToBeOnCartPage();
-
-  for (const productName of addedProducts) {
-    await this.cartPage.expectCartToContainItem(productName);
-  }
+  expect(this.selection.length).toBeGreaterThan(0);
+  await this.cartPage.expectSelectedItems(this.selection);
 });
 
 Then('the shopping cart should be empty', async function (this: CustomWorld) {
   const cartBadge = this.page.locator('[data-test="shopping-cart-badge"]');
   await expect(cartBadge).not.toBeVisible();
-});
-
-// Test data helpers for cart
-Given('I have items in my cart', async function (this: CustomWorld) {
-  // Add a default item if no items are tracked
-  if (!this.hasTestData('addedProducts') || this.getTestData('addedProducts').length === 0) {
-    await this.inventoryPage.addProductToCart('Sauce Labs Backpack');
-    this.setTestData('addedProducts', ['Sauce Labs Backpack']);
-  }
-});
-
-// Price calculations (if needed for validation)
-Then('the cart total should be calculated correctly', async function (this: CustomWorld) {
-  const expectedTotal = await this.cartPage.calculateTotalPrice();
-  expect(expectedTotal).toBeGreaterThan(0);
-  
-  // Store for later use in checkout
-  this.setTestData('expectedCartTotal', expectedTotal);
 });

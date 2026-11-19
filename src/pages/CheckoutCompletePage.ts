@@ -9,8 +9,8 @@ export class CheckoutCompletePage extends BasePage {
   private readonly backHomeButton: Locator;
   private readonly successIcon: Locator;
 
-  constructor(page: Page, baseUrl?: string) {
-    super(page, baseUrl);
+  constructor(page: Page, baseUrl?: string, timeout?: number) {
+    super(page, baseUrl, timeout);
 
     this.pageTitle = this.page.locator('.title');
     this.completeHeader = this.getElementByTestId('complete-header');

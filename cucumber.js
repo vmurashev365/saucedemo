@@ -1,10 +1,12 @@
+const reportDir = process.env.REPORT_DIR || 'reports';
+
 const common = {
   requireModule: ['tsx/cjs'],
   require: ['tests/step-definitions/**/*.ts', 'tests/hooks/**/*.ts'],
   format: [
     'summary',
-    'html:reports/cucumber-report.html',
-    'json:reports/cucumber-report.json'
+    `html:${reportDir}/cucumber-report.html`,
+    `json:${reportDir}/cucumber-report.json`
   ],
   formatOptions: {
     snippetInterface: 'async-await'
