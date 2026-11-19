@@ -4,7 +4,7 @@ These files preserve the evidence tracked at review commit `aeb760cd33f66494b743
 
 - [Original HTML report](cucumber-report.html), generated on August 1, 2025 at 23:46:25 UTC+03:00. It shows 39 scenarios, with 34 passed and 5 failed.
 - [Original JSON report](cucumber-report.json), committed on August 3, 2025. It records 39 scenarios, with 33 passed and 6 failed. The 223 Gherkin steps include 200 passed, 6 failed, and 17 skipped. All 78 per-scenario hooks passed.
-- [Original failure screenshots](screenshots/) with timestamps from August 1 and 2, 2025.
+- [Original failure screenshots](screenshots/) from the August 2, 2025 run that the JSON report records. Both reports also embed the screenshots of their own run.
 
 ## JSON run by feature
 

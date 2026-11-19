@@ -1,6 +1,6 @@
 # Cart and checkout review
 
-The manual test cases and story map define the expected behavior. The live observations record what SauceDemo did on November 19, 2026 in headless Chromium. The two confirmed discrepancies remain visible in the default live suite under `@known-spec-discrepancy`.
+The manual test cases and story map define the expected behavior. The live observations record what SauceDemo did on November 19, 2026 in headless Chromium. The two confirmed discrepancies are tagged `@known-spec-discrepancy` and run separately from the regression suite. `npm run test:discrepancies`, which CI runs on every push and weekly, passes only while both still fail at the documented step with the documented diagnostic. If SauceDemo changes, the check fails and names the case to review.
 
 - [Manual test cases](Test%20Cases%20-%20SauceDemo%20E-commerce%20Platform.pdf)
 - [User story mapping](User%20Story%20Mapping%20-%20SauceDemo.pdf)
@@ -37,7 +37,7 @@ All report folders are generated under `reports/business/local/`. Open `cucumber
 
 ## Smoke gate
 
-`npm run test:smoke:headless` uses the current Cucumber invocation to verify that at least one scenario was collected. It preserves Cucumber's exit code on failures and writes the usual HTML and JSON to `reports/smoke/`. To verify the zero-scenario path, remove just the four `@smoke` tags in a temporary checkout. Dry discovery still finds 39 scenarios. Smoke exits 1 with `Smoke check failed: Cucumber collected no @smoke scenarios.` [Smoke runner](../tests/run-smoke.js) · [Workflow and failure artifact upload](../.github/workflows/qa.yml)
+`npm run test:smoke` uses the current Cucumber invocation to verify that at least one scenario was collected. It preserves Cucumber's exit code on failures and writes the usual HTML and JSON to `reports/`. To verify the zero-scenario path, remove just the four `@smoke` tags in a temporary checkout. Dry discovery still finds 39 scenarios. Smoke exits 1 with `Smoke check failed: Cucumber collected no @smoke scenarios.` The assertion controls also run the smoke command against a failing scenario. [Smoke runner](../tests/run-smoke.js)
 
 ## Archived failure investigation
 
@@ -52,4 +52,4 @@ All six failures in the archived JSON reached Cucumber's former 5-second step li
 | Verify order summary calculations | The add-items step timed out on `/checkout-step-one.html` while trying to use inventory controls. | Passed with $39.98 subtotal, $3.20 tax and $43.18 total. |
 | Login with different valid user types, performance example | The login step for `performance_glitch_user` included a fixed 10-second sleep under a 5-second Cucumber timeout. The attachment showed `/inventory.html`. | Passed using observable inventory checks. |
 
-The full live Chromium run finished with 37 passed and the two documented discrepancies. Its exit code was 1. `npm run test:full:headless` writes the live Cucumber report under `reports/full/`.
+On November 19, 2026, the live regression (`npm test`) passed all 37 scenarios in headless Chromium, and `npm run test:discrepancies` reproduced both documented discrepancies. The discrepancy command writes its Cucumber report, screenshots and traces under `reports/known-discrepancies/`. `npm run test:all` runs all 39 scenarios together and exits 1 while the discrepancies remain.

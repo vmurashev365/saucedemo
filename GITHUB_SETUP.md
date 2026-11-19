@@ -1,3 +1,0 @@
-# GitHub repository
-
-The portfolio repository is available on [GitHub](https://github.com/vmurashev365/saucedemo). See the [README](README.md) for setup and test commands. The [August 2025 baseline](test_documents/baseline-2025-08/README.md) records the original automation results.
