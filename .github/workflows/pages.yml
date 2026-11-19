@@ -1,0 +1,62 @@
+name: Publish test report
+
+on:
+  workflow_run:
+    workflows: [SauceDemo QA]
+    types: [completed]
+    branches: [master]
+
+permissions:
+  actions: read
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    # Runs on master publish their reports, whatever the result. Pull request runs never do.
+    if: github.event.workflow_run.event != 'pull_request' && github.event.workflow_run.conclusion != 'cancelled'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Check out the report landing page
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          sparse-checkout: .github/report-site
+      - name: Download reports from the QA run
+        uses: actions/download-artifact@v8
+        with:
+          pattern: report-*
+          path: site
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+      - name: Assemble the site
+        env:
+          RUN_URL: ${{ github.event.workflow_run.html_url }}
+          RUN_EVENT: ${{ github.event.workflow_run.event }}
+          RUN_STARTED: ${{ github.event.workflow_run.run_started_at }}
+          RUN_CONCLUSION: ${{ github.event.workflow_run.conclusion }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          cp .github/report-site/index.html site/
+          jq -n --arg runUrl "$RUN_URL" --arg event "$RUN_EVENT" --arg started "$RUN_STARTED" \
+            --arg conclusion "$RUN_CONCLUSION" --arg sha "$HEAD_SHA" \
+            --arg repository "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY" \
+            '{runUrl: $runUrl, event: $event, started: $started, conclusion: $conclusion, sha: $sha, repository: $repository}' \
+            > site/run.json
+          find site -maxdepth 2 | sort
+      - name: Upload the Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SauceDemo QA Report</title>
+  <meta name="description" content="Latest automated test run for the SauceDemo QA portfolio: regression, known spec discrepancies, and assertion controls.">
+  <style>
+    :root {
+      --bg: #f6f7f9; --surface: #ffffff; --text: #1d2330; --muted: #5b6475; --border: #dde1e8;
+      --pass: #1a7f37; --pass-bg: #e6f4ea; --fail: #c62828; --fail-bg: #fdecea; --warn: #8a5a00; --warn-bg: #fff4d6;
+      --link: #0b5cad; --code-bg: #f1f3f6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #12151b; --surface: #1b1f27; --text: #e6e9ef; --muted: #9aa3b2; --border: #2d333f;
+        --pass: #5fd07a; --pass-bg: #173322; --fail: #ff7b72; --fail-bg: #3a1d1d; --warn: #f2c35b; --warn-bg: #3a2f14;
+        --link: #6cb6ff; --code-bg: #232833;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--text);
+      font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    main { max-width: 960px; margin: 0 auto; padding: 32px 16px 48px; }
+    h1 { font-size: 1.75rem; margin: 0 0 4px; }
+    h2 { font-size: 1.15rem; margin: 0; }
+    a { color: var(--link); }
+    .meta { color: var(--muted); margin: 0 0 24px; }
+    .meta a { color: inherit; }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 0 0 16px; }
+    .card-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: space-between; }
+    .card p { margin: 8px 0 0; color: var(--muted); }
+    .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-size: .85rem; font-weight: 600; }
+    .pass { color: var(--pass); background: var(--pass-bg); }
+    .fail { color: var(--fail); background: var(--fail-bg); }
+    .warn { color: var(--warn); background: var(--warn-bg); }
+    .stats { display: flex; flex-wrap: wrap; gap: 24px; margin: 16px 0 0; }
+    .stat b { display: block; font-size: 1.5rem; }
+    .stat span { color: var(--muted); font-size: .9rem; }
+    .finding { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 16px; }
+    .finding h3 { font-size: 1rem; margin: 0 0 4px; }
+    .finding code { display: block; white-space: pre-wrap; overflow-wrap: anywhere; background: var(--code-bg);
+      border-radius: 6px; padding: 8px 10px; margin: 8px 0; font-size: .85rem; }
+    .links { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-top: 12px; }
+    footer { color: var(--muted); font-size: .9rem; margin-top: 24px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>SauceDemo QA · latest test run</h1>
+  <p class="meta" id="meta">Loading run details…</p>
+  <div id="cards"></div>
+  <footer>
+    Trace links open the recorded browser session in the official
+    <a href="https://trace.playwright.dev/">Playwright Trace Viewer</a> with DOM snapshots, network, and console for every step.
+    Nothing needs to be installed.
+  </footer>
+</main>
+<script>
+  const sections = [
+    {
+      dir: 'report-regression',
+      title: 'Regression · live SauceDemo · Chromium',
+      intro: 'Authentication, inventory, cart, and checkout scenarios against www.saucedemo.com.',
+      expectFailures: false
+    },
+    {
+      dir: 'report-known-discrepancies',
+      title: 'Known spec discrepancies',
+      intro: 'SauceDemo behavior that contradicts the written test cases. These scenarios are expected to fail, '
+        + 'and CI checks that they still fail at the documented step.',
+      expectFailures: true
+    },
+    {
+      dir: 'report-controlled-failure',
+      title: 'Assertion control · deliberate tax defect',
+      intro: 'A local fixture changes the displayed tax from $3.20 to $9.99. The suite must catch it. '
+        + 'CI runs 15 such controls; this report shows one of them.',
+      expectFailures: true
+    }
+  ];
+
+  function el(tag, attributes = {}, ...children) {
+    const node = document.createElement(tag);
+    for (const [name, value] of Object.entries(attributes)) node.setAttribute(name, value);
+    for (const child of children) node.append(child);
+    return node;
+  }
+
+  function link(href, text) {
+    return el('a', { href }, text);
+  }
+
+  function traceViewer(dir, file) {
+    const absolute = new URL(`${dir}/${file}`, location.href).href;
+    return `https://trace.playwright.dev/?trace=${encodeURIComponent(absolute)}`;
+  }
+
+  function summarize(features) {
+    const scenarios = features.flatMap(feature => feature.elements.filter(element => element.type === 'scenario'));
+    return scenarios.map(scenario => {
+      const steps = scenario.steps.filter(step => !step.hidden);
+      const failed = scenario.steps.find(step => step.result.status === 'failed');
+      const evidence = scenario.steps.flatMap(step => step.embeddings || [])
+        .filter(item => item.mime_type === 'application/json')
+        .map(item => JSON.parse(atob(item.data)))[0];
+      return {
+        name: scenario.name,
+        tags: (scenario.tags || []).map(tag => tag.name),
+        status: failed ? 'failed' : 'passed',
+        steps: steps.length,
+        failedStep: failed && `${failed.keyword.trim()} ${failed.name}`,
+        // Show the assertion message, not the stack trace.
+        message: failed && (failed.result.error_message || '').split(/\r?\n/)
+          .filter(line => line.trim() && !/^\s*at /.test(line)).slice(0, 3).join('\n'),
+        evidence
+      };
+    });
+  }
+
+  function renderSection(section, scenarios) {
+    const failed = scenarios.filter(item => item.status === 'failed');
+    const passed = scenarios.length - failed.length;
+    let badge;
+    if (!scenarios.length) badge = el('span', { class: 'badge warn' }, 'No report');
+    else if (section.expectFailures) badge = el('span', { class: 'badge warn' }, `${failed.length} expected failure${failed.length === 1 ? '' : 's'}`);
+    else badge = el('span', { class: `badge ${failed.length ? 'fail' : 'pass'}` }, failed.length ? `${failed.length} failed` : 'All passed');
+
+    const card = el('section', { class: 'card' },
+      el('div', { class: 'card-head' }, el('h2', {}, section.title), badge),
+      el('p', {}, section.intro),
+      el('div', { class: 'stats' },
+        el('div', { class: 'stat' }, el('b', {}, String(scenarios.length)), el('span', {}, 'scenarios')),
+        el('div', { class: 'stat' }, el('b', {}, String(passed)), el('span', {}, 'passed')),
+        el('div', { class: 'stat' }, el('b', {}, String(failed.length)), el('span', {}, 'failed')),
+        el('div', { class: 'stat' }, el('b', {}, String(scenarios.reduce((sum, item) => sum + item.steps, 0))), el('span', {}, 'Gherkin steps'))),
+      el('div', { class: 'links' }, link(`${section.dir}/cucumber-report.html`, 'Open the Cucumber HTML report')));
+
+    for (const item of failed) {
+      const caseIds = item.tags.filter(tag => /^@TC-\d+$/.test(tag)).map(tag => tag.slice(1));
+      const links = el('div', { class: 'links' });
+      if (item.evidence?.trace) links.append(link(traceViewer(section.dir, item.evidence.trace), 'Open the Playwright trace'));
+      if (item.evidence?.screenshot) links.append(link(`${section.dir}/${item.evidence.screenshot}`, 'Failure screenshot'));
+      card.append(el('div', { class: 'finding' },
+        el('h3', {}, `${caseIds.length ? `${caseIds.join(', ')} · ` : ''}${item.name}`),
+        el('p', {}, `Failed step: ${item.failedStep}`),
+        el('code', {}, item.message),
+        links));
+    }
+    return card;
+  }
+
+  async function load() {
+    const cards = document.getElementById('cards');
+    const meta = document.getElementById('meta');
+    try {
+      const run = await fetch('run.json').then(response => response.json());
+      const started = new Date(run.started);
+      meta.replaceChildren(
+        `Run ${run.conclusion === 'success' ? 'passed' : run.conclusion} on ${started.toUTCString()} · commit `,
+        link(`${run.repository}/commit/${run.sha}`, run.sha.slice(0, 7)), ' · ',
+        link(run.runUrl, 'GitHub Actions run'), ' · ',
+        link(run.repository, 'Source code'));
+    } catch {
+      meta.textContent = 'Run details are unavailable.';
+    }
+
+    for (const section of sections) {
+      let scenarios = [];
+      try {
+        const response = await fetch(`${section.dir}/cucumber-report.json`);
+        if (response.ok) scenarios = summarize(await response.json());
+      } catch {
+        scenarios = [];
+      }
+      cards.append(renderSection(section, scenarios));
+    }
+  }
+
+  load();
+</script>
+</body>
+</html>

@@ -1,14 +1,24 @@
 name: SauceDemo QA
 
 on:
+  push:
+    branches: [master]
   pull_request:
+  schedule:
+    # Weekly check that the live SauceDemo site still behaves as recorded.
+    - cron: '0 6 * * 1'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: qa-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  chromium:
+  regression:
+    name: Regression · live site · Chromium
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
@@ -27,18 +37,77 @@ jobs:
         run: npm run bdd:dry
         env:
           REPORT_DIR: reports/dry
-      - name: Install Chromium and system dependencies
+      - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Run headless smoke on pull requests
-        if: github.event_name == 'pull_request'
-        run: npm run test:smoke:headless
-      - name: Run the full headless suite on manual dispatch
-        if: github.event_name == 'workflow_dispatch'
-        run: npm run test:full:headless
-      - name: Upload available failure evidence
+      - name: Run the regression suite
+        run: npm test
+        env:
+          REPORT_DIR: reports/regression
+      - name: Upload the Cucumber report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-regression
+          path: reports/regression/
+          if-no-files-found: ignore
+
+  known-discrepancies:
+    name: Known spec discrepancies · expected to reproduce
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify that TC-031 and TC-046 still reproduce
+        run: npm run test:discrepancies
+      - name: Upload the Cucumber report, screenshots, and traces
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-known-discrepancies
+          path: reports/known-discrepancies/
+          if-no-files-found: ignore
+
+  assertion-controls:
+    name: Assertion controls · local fixture
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Run checkout scenarios against correct fixture behavior
+        run: npm run test:checkout:local
+      - name: Verify that deliberate defects fail the expected steps
+        run: npm run test:checkout:controls
+      - name: Upload the controlled tax failure report
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: report-controlled-failure
+          path: reports/business/local/tax/
+          if-no-files-found: ignore
+      - name: Upload all control evidence on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: saucedemo-chromium-${{ github.run_id }}-${{ github.run_attempt }}
-          path: reports/
+          name: assertion-controls-${{ github.run_id }}-${{ github.run_attempt }}
+          path: reports/business/
           if-no-files-found: ignore
