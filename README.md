@@ -1,5 +1,8 @@
 # SauceDemo · QA and test automation portfolio
 
+[![SauceDemo QA](https://github.com/vmurashev365/saucedemo/actions/workflows/qa.yml/badge.svg?branch=master)](https://github.com/vmurashev365/saucedemo/actions/workflows/qa.yml)
+[![Latest test report](https://img.shields.io/badge/report-latest%20run-0b5cad)](https://vmurashev365.github.io/saucedemo/)
+
 End-to-end QA of the [SauceDemo](https://www.saucedemo.com/) online store. The work starts from a written test strategy and manual test cases. It ends with a BDD automation suite that runs in CI and publishes its report.
 
 ## What this project shows
@@ -8,9 +11,9 @@ End-to-end QA of the [SauceDemo](https://www.saucedemo.com/) online store. The w
 - **Real findings.** The suite found two places where SauceDemo contradicts its test cases. Both are documented with reproduction steps and screenshots. CI confirms on every push, and weekly, that they still reproduce.
 - **Tests that are proven to fail.** A local copy of the checkout injects 15 deliberate defects, such as a wrong tax or a lost cart item. Each defect must fail the expected step with the expected message.
 - **Failures that explain themselves.** A failure produces a message such as `Tax: expected $3.20, actual $9.99.`, a screenshot, and a Playwright trace grouped by Gherkin step.
-- **CI with a report summary.** GitHub Actions runs the type check, the live regression, the discrepancy check, and the assertion controls. A summary page links each report, screenshot, and Playwright trace.
+- **CI with a public report.** GitHub Actions runs the type check, the live regression, the discrepancy check, and the assertion controls. The [latest report](https://vmurashev365.github.io/saucedemo/) opens in the browser, and each trace opens in the Playwright Trace Viewer.
 
-![Test run summary: 37 regression scenarios passed, 2 known discrepancies reproduced, and a controlled tax defect caught](test_documents/portfolio/report-overview.png)
+[![Latest test run: 37 regression scenarios passed, 2 known discrepancies reproduced, and a controlled tax defect caught](test_documents/portfolio/report-overview.png)](https://vmurashev365.github.io/saucedemo/)
 
 ## Findings
 
